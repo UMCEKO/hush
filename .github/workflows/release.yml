@@ -93,9 +93,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           V=${{ needs.guard.outputs.version }}
-          git tag "v$V" && git push origin "v$V"
-          gh release create "v$V" hush_v*_x86_64-linux.tar.gz* \
-            --title "HUSH v$V" --generate-notes
+          if gh release view "v$V" >/dev/null 2>&1; then
+            echo "release v$V exists — refreshing assets"
+            gh release upload "v$V" hush_v*_x86_64-linux.tar.gz* --clobber
+          else
+            git tag "v$V" && git push origin "v$V"
+            gh release create "v$V" hush_v*_x86_64-linux.tar.gz* --title "HUSH v$V" --generate-notes
+          fi
 
   flatpak:
     needs: [guard, release]
@@ -134,9 +138,12 @@ jobs:
       - name: SSH to AUR
         run: |
           install -d -m700 ~/.ssh
-          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur && chmod 600 ~/.ssh/aur
-          printf 'Host aur.archlinux.org\n  IdentityFile ~/.ssh/aur\n  StrictHostKeyChecking accept-new\n  User aur\n' > ~/.ssh/config
+          install -m600 /dev/stdin ~/.ssh/aur <<< "${{ secrets.AUR_SSH_PRIVATE_KEY }}"
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts 2>/dev/null
       - name: Push both packages
+        env:
+          # Every git op (clone AND push) uses the AUR key explicitly.
+          GIT_SSH_COMMAND: "ssh -i /root/.ssh/aur -o IdentitiesOnly=yes -o UserKnownHostsFile=/root/.ssh/known_hosts"
         run: |
           git config --global --add safe.directory '*'  # .git gets chowned to builder below
           V=${{ needs.guard.outputs.version }}
@@ -154,6 +161,6 @@ jobs:
             su builder -c "makepkg --printsrcinfo" > .SRCINFO
             git config user.name "umceko"; git config user.email "support@stockimg.ai"
             git add PKGBUILD .SRCINFO
-            git commit -m "Update to $V" && GIT_SSH_COMMAND="ssh -F ~/.ssh/config" git push
+            git commit -m "Update to $V" && git push
             cd ..
           done
