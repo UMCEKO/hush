@@ -2879,7 +2879,7 @@ checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 
 [[package]]
 name = "hush-app"
-version = "0.2.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "base64",
@@ -2896,7 +2896,7 @@ dependencies = [
 
 [[package]]
 name = "hush-core"
-version = "0.2.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "libc",
@@ -2910,7 +2910,7 @@ dependencies = [
 
 [[package]]
 name = "hush-engine"
-version = "0.2.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "ctrlc",
@@ -8677,9 +8677,9 @@ dependencies = [
 
 [[package]]
 name = "wuff"
-version = "0.2.5"
+version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d77cd3107d02dc860d9377a7e28a60e2a77c6d1964f4119999b03dd95f007719"
+checksum = "b146397d8b09a016a545e68ea888ea56e0996df6fb9efb1b99bb62700cac2b90"
 dependencies = [
  "arrayvec",
  "brotli-decompressor",

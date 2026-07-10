@@ -25,7 +25,7 @@
   </developer>
   <content_rating type="oars-1.1" />
   <releases>
-    <release version="0.2.0" date="2026-07-10">
+    <release version="1.0.0" date="2026-07-10">
       <description>
         <p>Packaged release: Flatpak, AUR, and Nix with runtime-provisioned SDK.</p>
       </description>
