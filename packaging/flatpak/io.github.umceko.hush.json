@@ -1,0 +1,38 @@
+{
+  "app-id": "io.github.umceko.hush",
+  "runtime": "org.gnome.Platform",
+  "runtime-version": "49",
+  "sdk": "org.gnome.Sdk",
+  "command": "hush",
+  "finish-args": [
+    "--share=ipc",
+    "--socket=wayland",
+    "--socket=fallback-x11",
+    "--socket=pulseaudio",
+    "--filesystem=xdg-run/pipewire-0",
+    "--device=dri",
+    "--share=network",
+    "--talk-name=org.kde.StatusNotifierWatcher",
+    "--talk-name=org.freedesktop.Flatpak"
+  ],
+  "modules": [
+    {
+      "name": "hush",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -Dm755 hush /app/bin/hush",
+        "install -Dm755 hushd /app/bin/hushd",
+        "install -Dm644 io.github.umceko.hush.desktop /app/share/applications/io.github.umceko.hush.desktop",
+        "install -Dm644 io.github.umceko.hush.metainfo.xml /app/share/metainfo/io.github.umceko.hush.metainfo.xml",
+        "install -Dm644 hush.svg /app/share/icons/hicolor/scalable/apps/io.github.umceko.hush.svg"
+      ],
+      "sources": [
+        { "type": "file", "path": "hush" },
+        { "type": "file", "path": "hushd" },
+        { "type": "file", "path": "../../dist/io.github.umceko.hush.desktop" },
+        { "type": "file", "path": "../../dist/io.github.umceko.hush.metainfo.xml" },
+        { "type": "file", "path": "../../dist/hush.svg" }
+      ]
+    }
+  ]
+}

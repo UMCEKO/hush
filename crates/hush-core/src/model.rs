@@ -4,7 +4,6 @@
 
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 use anyhow::{Context, Result, bail};
 use sha2::{Digest, Sha256};
@@ -76,9 +75,10 @@ impl GpuInfo {
     }
 }
 
-/// All NVIDIA GPUs visible to `nvidia-smi`, in its enumeration order.
+/// All NVIDIA GPUs visible to `nvidia-smi`, in its enumeration order. Under Flatpak
+/// this runs on the host (the sandbox has no `nvidia-smi` binary).
 pub fn list_gpus() -> Vec<GpuInfo> {
-    let out = Command::new("nvidia-smi")
+    let out = crate::host_command("nvidia-smi")
         .args(["--query-gpu=index,uuid,name,compute_cap", "--format=csv,noheader,nounits"])
         .output();
     match out {

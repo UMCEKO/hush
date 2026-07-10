@@ -28,6 +28,24 @@ pub fn data_home() -> PathBuf {
     })
 }
 
+/// Running inside a Flatpak sandbox? (Host tools like `nvidia-smi` aren't present
+/// and must be reached with `flatpak-spawn --host`.)
+pub fn in_flatpak() -> bool {
+    std::path::Path::new("/.flatpak-info").exists()
+}
+
+/// A `Command` for a HOST program: transparently `flatpak-spawn --host <prog>`
+/// under Flatpak, or a plain command otherwise.
+pub fn host_command(program: &str) -> std::process::Command {
+    if in_flatpak() {
+        let mut c = std::process::Command::new("flatpak-spawn");
+        c.arg("--host").arg(program);
+        c
+    } else {
+        std::process::Command::new(program)
+    }
+}
+
 /// Live, lock-light control surface shared between the UI and the audio engine.
 pub struct Controls {
     intensity: AtomicU32,                  // f32 bits, 0.0..1.0

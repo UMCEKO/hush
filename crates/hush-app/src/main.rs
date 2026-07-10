@@ -1054,15 +1054,19 @@ fn SettingsPage() -> Element {
                         }
                     }
                 }
-                div { class: "setrow",
-                    div { class: "setmeta",
-                        div { class: "sett", "Launch at login" }
-                        div { class: "setd", "Start the denoiser with your session" }
-                    }
-                    button {
-                        class: if autostart() { "switch on" } else { "switch" },
-                        onclick: move |_| { let n = !autostart(); set_autostart(n); autostart.set(n); },
-                        div { class: "sknob" }
+                // systemd --user isn't reachable inside the Flatpak sandbox; the
+                // daemon is sibling-spawned there instead, so hide this toggle.
+                if !hush_core::in_flatpak() {
+                    div { class: "setrow",
+                        div { class: "setmeta",
+                            div { class: "sett", "Launch at login" }
+                            div { class: "setd", "Start the denoiser with your session" }
+                        }
+                        button {
+                            class: if autostart() { "switch on" } else { "switch" },
+                            onclick: move |_| { let n = !autostart(); set_autostart(n); autostart.set(n); },
+                            div { class: "sknob" }
+                        }
                     }
                 }
                 div { class: "setrow",
