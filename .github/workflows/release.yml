@@ -136,12 +136,12 @@ jobs:
           V=${{ needs.guard.outputs.version }}
           TARURL="https://github.com/UMCEKO/hush/releases/download/v${V}/hush_v${V}_x86_64-linux.tar.gz"
           BINSHA=$(curl -fsSL "${TARURL}.sha256" | cut -d' ' -f1)
-          for pkg in hush-bin hush; do
+          for pkg in hush-mic-bin hush-mic; do
             git clone "ssh://aur@aur.archlinux.org/${pkg}.git" "aur-$pkg"
             cp "packaging/aur/$pkg/PKGBUILD" "aur-$pkg/PKGBUILD"
             cd "aur-$pkg"
             sed -i "s/^pkgver=.*/pkgver=$V/" PKGBUILD
-            if [ "$pkg" = "hush-bin" ]; then
+            if [ "$pkg" = "hush-mic-bin" ]; then
               sed -i "s/^sha256sums=.*/sha256sums=('$BINSHA')/" PKGBUILD
             fi
             chown -R builder .

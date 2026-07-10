@@ -1,4 +1,4 @@
-pkgbase = hush-bin
+pkgbase = hush-mic-bin
 	pkgdesc = NVIDIA Maxine AI noise-suppression virtual microphone (prebuilt binaries)
 	pkgver = 0.0.0
 	pkgrel = 1
@@ -14,9 +14,11 @@ pkgbase = hush-bin
 	depends = dbus
 	depends = gcc-libs
 	optdepends = nvidia-utils: nvidia-smi GPU detection (required at runtime)
-	provides = hush
+	provides = hush-mic
+	conflicts = hush-mic
 	conflicts = hush
-	source = hush-bin-0.0.0.tar.gz::https://github.com/UMCEKO/hush/releases/download/v0.0.0/hush_v0.0.0_x86_64-linux.tar.gz
+	conflicts = hush-bin
+	source = hush-mic-bin-0.0.0.tar.gz::https://github.com/UMCEKO/hush/releases/download/v0.0.0/hush_v0.0.0_x86_64-linux.tar.gz
 	sha256sums = SKIP
 
-pkgname = hush-bin
+pkgname = hush-mic-bin
