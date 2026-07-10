@@ -124,6 +124,7 @@ fn App() -> Element {
         }
     });
     rsx! {
+        style { {FONT_CSS} }
         style { {CSS} }
         div { class: "root",
             // Tray + window-restore live at the app root so "Show HUSH" works on
@@ -1053,8 +1054,11 @@ fn SettingsPage() -> Element {
     }
 }
 
+/// Vendored @font-face blocks with the woff2 bytes inlined as base64 data: URIs
+/// at build time (build.rs) — no network needed to render the UI.
+const FONT_CSS: &str = include_str!(concat!(env!("OUT_DIR"), "/fonts.css"));
+
 const CSS: &str = r#"
-@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 :root{
   --bg:#070809; --card:#0e1217; --card2:#11161c; --line:#1b2128;
   --txt:#e9eef2; --mut:#5d6975; --acc:#37f2a6; --acc2:#0f7a52; --warn:#ff6b6b; --warn2:#6e2626;

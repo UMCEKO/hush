@@ -21,6 +21,9 @@ dioxus.workspace = true
 dioxus-native = { workspace = true, optional = true }
 image = { version = "=0.25.6", optional = true, default-features = false, features = ["jpeg", "png", "webp"] }
 
+[build-dependencies]
+base64 = "0.22"
+
 # UI: webview by default; Blitz (native/wgpu) via the `blitz` feature + NV_MAXINE_BLITZ=1.
 [features]
 default = []

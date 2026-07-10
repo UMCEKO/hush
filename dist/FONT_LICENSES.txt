@@ -1,0 +1,10 @@
+HUSH bundles the following fonts, embedded in the GUI binary. Both are licensed
+under the SIL Open Font License, Version 1.1 (https://openfontlicense.org).
+
+  Chakra Petch   — Copyright (c) Cadson Demak
+                   https://fonts.google.com/specimen/Chakra+Petch
+  JetBrains Mono — Copyright (c) JetBrains s.r.o.
+                   https://www.jetbrains.com/lp/mono/
+
+The OFL permits bundling and redistribution with the software. Font binaries were
+vendored from the Fontsource CDN (see scripts/vendor-fonts.sh).

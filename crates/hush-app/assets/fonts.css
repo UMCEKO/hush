@@ -1,0 +1,9 @@
+/* Vendored UI fonts. Font-file refs are rewritten to base64 data: URIs at build
+   time (build.rs) so the GUI needs no network to render. */
+@font-face { font-family: 'Chakra Petch'; font-weight: 400; font-style: normal; font-display: swap; src: url(fonts/chakra-petch-400.woff2) format('woff2'); }
+@font-face { font-family: 'Chakra Petch'; font-weight: 500; font-style: normal; font-display: swap; src: url(fonts/chakra-petch-500.woff2) format('woff2'); }
+@font-face { font-family: 'Chakra Petch'; font-weight: 600; font-style: normal; font-display: swap; src: url(fonts/chakra-petch-600.woff2) format('woff2'); }
+@font-face { font-family: 'Chakra Petch'; font-weight: 700; font-style: normal; font-display: swap; src: url(fonts/chakra-petch-700.woff2) format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 400; font-style: normal; font-display: swap; src: url(fonts/jetbrains-mono-400.woff2) format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 500; font-style: normal; font-display: swap; src: url(fonts/jetbrains-mono-500.woff2) format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-weight: 700; font-style: normal; font-display: swap; src: url(fonts/jetbrains-mono-700.woff2) format('woff2'); }
