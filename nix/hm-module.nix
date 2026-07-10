@@ -28,8 +28,14 @@ in
       };
       Service = {
         ExecStart = "${cfg.package}/bin/hushd";
+        # The daemon links the Maxine runtime the app provisions into the XDG data
+        # dir at first launch (+ the host driver's libcuda). Until then it exits;
+        # opening the GUI downloads the runtime and restarts this unit.
+        Environment =
+          let d = "%h/.local/share/hush/sdk/2.1.0"; in
+          "LD_LIBRARY_PATH=${d}/nvafx/lib:${d}/external/cuda/lib:${d}/features/denoiser/lib:/run/opengl-driver/lib";
         Restart = "on-failure";
-        RestartSec = 2;
+        RestartSec = 5;
       };
       Install.WantedBy = [ "default.target" ];
     };

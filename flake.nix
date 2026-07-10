@@ -3,19 +3,20 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    crane.url = "github:ipetkov/crane";
   };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, crane }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true; # the CDN link tarball carries NVIDIA libs
       };
-      hush = pkgs.callPackage ./nix/package.nix { };
+      craneLib = crane.mkLib pkgs;
+      hush = pkgs.callPackage ./nix/package.nix { inherit craneLib; };
 
       # Native libs the webview GUI + PipeWire engine need to build/link.
-      nativeDeps = with pkgs; [ pkg-config wrapGAppsHook3 rustPlatform.bindgenHook ];
       buildDeps = with pkgs; [
         pipewire dbus webkitgtk_4_1 gtk3 libsoup_3 glib glib-networking openssl xdotool zstd
       ];
@@ -29,7 +30,7 @@
       homeManagerModules.default = import ./nix/hm-module.nix self;
 
       devShells.${system}.default = pkgs.mkShell {
-        nativeBuildInputs = nativeDeps ++ [ pkgs.rustc pkgs.cargo ];
+        nativeBuildInputs = with pkgs; [ pkg-config wrapGAppsHook3 rustPlatform.bindgenHook rustc cargo ];
         buildInputs = buildDeps;
         # Dev builds link the engine against the locally-extracted SDK; packaged
         # builds use NVAFX_LINK_DIR from the CDN link tarball instead.

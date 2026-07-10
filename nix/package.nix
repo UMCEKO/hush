@@ -1,9 +1,14 @@
 { lib
 , stdenv
+, craneLib
 , rustPlatform
+, llvmPackages
+, fetchurl
+, runCommandLocal
 , pkg-config
 , wrapGAppsHook3
 , patchelf
+, zstd
 , pipewire
 , dbus
 , webkitgtk_4_1
@@ -14,30 +19,32 @@
 , openssl
 , xdotool
 , pulseaudio # pactl, used by the engine to manage the virtual source
-, dioxus-src
-, blitz-src
-, nvafx-sdk
 }:
 
-rustPlatform.buildRustPackage {
+let
   pname = "hush";
-  version = "0.1.0";
+  version = "0.2.0";
 
-  src = lib.cleanSource ../.;
-  cargoLock.lockFile = ../Cargo.lock;
-
-  # The Cargo.toml pins dioxus/blitz to checkouts in $HOME; point them at the
-  # flake inputs so the sandboxed build can see them.
-  postPatch = ''
-    substituteInPlace Cargo.toml \
-      --replace-fail "/home/umceko/dioxus" "${dioxus-src}" \
-      --replace-fail "/home/umceko/blitz" "${blitz-src}"
+  # Link-time NVIDIA libs (libnv_audiofx + libcudart) from the HUSH CDN. Only the
+  # daemon links these; the runtime CUDA/TensorRT stack + models are downloaded by
+  # the app at first launch, so the store package carries no heavy NVIDIA payload.
+  afxLink = fetchurl {
+    url = "https://cdn.hush.umceko.com/sdk/2.1.0/afx-link-x86_64.tar.zst";
+    hash = "sha256-6zgRNNz654o1uF8GxtLIcQPvu35zbg3LzT2qT8NZ66U=";
+  };
+  # Unpacked once into the store (symlink chains preserved); build.rs reads it.
+  afxLinkDir = runCommandLocal "afx-link" { } ''
+    mkdir -p $out
+    tar --use-compress-program=${zstd}/bin/zstd -xf ${afxLink} -C $out
   '';
 
   nativeBuildInputs = [
     pkg-config
     wrapGAppsHook3
     rustPlatform.bindgenHook # pipewire-sys / libspa-sys
+    # Also native: libspa-sys/pipewire-sys build.rs run pkg-config for the spa
+    # headers, which reads the native PKG_CONFIG_PATH.
+    pipewire
   ];
 
   buildInputs = [
@@ -52,43 +59,61 @@ rustPlatform.buildRustPackage {
     xdotool # libxdo for dioxus-desktop
   ];
 
-  # build.rs reads this to find libnv_audiofx + the SDK's CUDA/TensorRT libs.
-  env.NVAFX_SDK = "${nvafx-sdk}";
+  commonArgs = {
+    inherit pname version buildInputs nativeBuildInputs;
+    # libspa-sys bindgen needs the pipewire/spa headers visible at build time;
+    # strictDeps hides target buildInputs from the bindgen clang invocation.
+    strictDeps = false;
+    doCheck = false;
+
+    src = craneLib.cleanCargoSource ../.;
+
+    # Both the deps-only and final builds see the link libs.
+    NVAFX_LINK_DIR = "${afxLinkDir}";
+    # libspa-sys runs bindgen in build.rs; crane's deps build otherwise produces
+    # partial bindings (SPA_ID_INVALID goes missing). Give clang libclang's own
+    # headers, the libc headers, and pipewire's spa include dir explicitly.
+    LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
+    BINDGEN_EXTRA_CLANG_ARGS = "-isystem ${llvmPackages.libclang.lib}/lib/clang/${lib.getVersion llvmPackages.libclang}/include -isystem ${stdenv.cc.libc.dev}/include -I${pipewire.dev}/include/spa-0.2 -I${pipewire.dev}/include/pipewire-0.3";
+  };
+
+  cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+in
+craneLib.buildPackage (commonArgs // {
+  inherit cargoArtifacts;
+
+  # Only the shippable binaries (skip the dev tools denoise/mic/inttest).
+  cargoExtraArgs = "-p hush-app -p hush-engine --bin hush --bin hushd";
 
   postInstall = ''
-    mv $out/bin/app $out/bin/hush
-    rm -f $out/bin/denoise $out/bin/mic $out/bin/inttest
-
-    install -Dm644 dist/hush.desktop $out/share/applications/hush.desktop
-    install -Dm644 dist/hush.svg $out/share/icons/hicolor/scalable/apps/hush.svg
+    install -Dm644 dist/io.github.umceko.hush.desktop $out/share/applications/io.github.umceko.hush.desktop
+    install -Dm644 dist/io.github.umceko.hush.metainfo.xml $out/share/metainfo/io.github.umceko.hush.metainfo.xml
+    install -Dm644 dist/hush.svg $out/share/icons/hicolor/scalable/apps/io.github.umceko.hush.svg
   '';
 
-  # No NVAFX_MODEL default: the app detects the GPU and resolves/downloads the
-  # matching model at setup (a hard-pinned sm_89 path would defeat that).
   preFixup = ''
     gappsWrapperArgs+=(
       --prefix PATH : ${lib.makeBinPath [ pulseaudio ]}
     )
   '';
 
-  # Keep build.rs's DT_RPATH intact (the SDK dlopens its feature lib through the
-  # executable's RPATH), skip the rpath shrinker, and append what build.rs can't
-  # know about: libstdc++ for the NVIDIA blobs and the host driver's libcuda.
+  # hushd dlopens the CUDA/TensorRT stack + denoiser feature lib from the SDK the
+  # app provisions at runtime (found via LD_LIBRARY_PATH), so no SDK rpath is baked.
+  # It still needs libstdc++ (for the NVIDIA blobs) and the host driver's libcuda.
   dontPatchELF = true;
   postFixup = ''
-    for f in "$out"/bin/* "$out"/bin/.*-wrapped; do
+    for f in "$out/bin/hushd" "$out/bin/.hushd-wrapped"; do
       if [ -f "$f" ] && isELF "$f"; then
-        patchelf --force-rpath --add-rpath \
-          "${nvafx-sdk}/features/denoiser/lib:${lib.getLib stdenv.cc.cc}/lib:/run/opengl-driver/lib" \
-          "$f"
+        patchelf --add-rpath "${lib.getLib stdenv.cc.cc}/lib:/run/opengl-driver/lib" "$f"
       fi
     done
   '';
 
   meta = {
     description = "NVIDIA Maxine denoiser daemon + GUI exposing a clean virtual microphone via PipeWire";
+    homepage = "https://github.com/UMCEKO/hush";
     platforms = [ "x86_64-linux" ];
-    license = lib.licenses.unfree; # links the proprietary Maxine AFX SDK
+    license = lib.licenses.unfree; # bundles NVIDIA link libs
     mainProgram = "hush";
   };
-}
+})
