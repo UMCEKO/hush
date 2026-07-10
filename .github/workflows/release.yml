@@ -136,10 +136,15 @@ jobs:
           pacman -Syu --noconfirm --needed base-devel git openssh pacman-contrib
           useradd -m builder
       - name: SSH to AUR
+        env:
+          AUR_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
         run: |
           install -d -m700 ~/.ssh
-          install -m600 /dev/stdin ~/.ssh/aur <<< "${{ secrets.AUR_SSH_PRIVATE_KEY }}"
+          printf '%s\n' "$AUR_KEY" > ~/.ssh/aur
+          chmod 600 ~/.ssh/aur
           ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts 2>/dev/null
+          # sanity: key must be non-empty and parse as a valid private key
+          test -s ~/.ssh/aur && ssh-keygen -y -f ~/.ssh/aur >/dev/null && echo "key OK"
       - name: Push both packages
         env:
           # Every git op (clone AND push) uses the AUR key explicitly.
