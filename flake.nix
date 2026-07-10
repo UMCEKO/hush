@@ -3,18 +3,16 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    crane.url = "github:ipetkov/crane";
   };
 
-  outputs = { self, nixpkgs, crane }:
+  outputs = { self, nixpkgs }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true; # the CDN link tarball carries NVIDIA libs
       };
-      craneLib = crane.mkLib pkgs;
-      hush = pkgs.callPackage ./nix/package.nix { inherit craneLib; };
+      hush = pkgs.callPackage ./nix/package.nix { };
 
       # Native libs the webview GUI + PipeWire engine need to build/link.
       buildDeps = with pkgs; [

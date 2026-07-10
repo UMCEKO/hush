@@ -27,7 +27,11 @@ dioxus = { git = "https://github.com/UMCEKO/dioxus", rev = "555b9516b0b70800c13f
 dioxus-native = { git = "https://github.com/UMCEKO/dioxus", rev = "555b9516b0b70800c13f0f44e51c4f13d53c15ef" }
 
 # Blitz alpha.5 with UMCEKO's merged PRs (incl. the button-center fix on hush-stable).
+# debug_timer is patched to the same git source so it doesn't resolve from BOTH
+# crates.io and the blitz repo — that dual source breaks nix's importCargoLock
+# vendoring (it keys by name-version and collides).
 [patch.crates-io]
+debug_timer = { git = "https://github.com/UMCEKO/blitz", rev = "56ec6bff4260039bdb205fb0e3b4f547a783958d" }
 blitz-dom = { git = "https://github.com/UMCEKO/blitz", rev = "56ec6bff4260039bdb205fb0e3b4f547a783958d" }
 blitz-html = { git = "https://github.com/UMCEKO/blitz", rev = "56ec6bff4260039bdb205fb0e3b4f547a783958d" }
 blitz-net = { git = "https://github.com/UMCEKO/blitz", rev = "56ec6bff4260039bdb205fb0e3b4f547a783958d" }
