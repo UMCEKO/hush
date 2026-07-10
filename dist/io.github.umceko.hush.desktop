@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=HUSH
+GenericName=Noise Suppressor
+Comment=NVIDIA Maxine denoiser virtual microphone
+Exec=hush
+Icon=io.github.umceko.hush
+Terminal=false
+Categories=AudioVideo;Audio;Settings;
+Keywords=denoise;noise;microphone;maxine;suppression;

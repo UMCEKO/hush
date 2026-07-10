@@ -48,7 +48,8 @@ pub fn manifest_entry(version: u32, sm: u32) -> Option<&'static ModelEntry> {
     MANIFEST.iter().find(|e| e.sm == sm && e.version == version)
 }
 
-fn model_base() -> String {
+/// Base URL of the CDN mirror (models + SDK), overridable for tests.
+pub(crate) fn cdn_base() -> String {
     std::env::var("HUSH_MODEL_BASE").unwrap_or_else(|_| MODEL_BASE.to_string())
 }
 
@@ -102,11 +103,7 @@ fn parse_gpu_row(line: &str) -> Option<GpuInfo> {
     Some(GpuInfo { index, uuid, name, sm })
 }
 
-fn data_home() -> PathBuf {
-    std::env::var_os("XDG_DATA_HOME").map(PathBuf::from).unwrap_or_else(|| {
-        PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(".local/share")
-    })
-}
+use crate::data_home;
 
 fn gpu_pref_path() -> PathBuf {
     data_home().join("hush/gpu")
@@ -158,14 +155,13 @@ fn legacy_cache_dir(sm: u32) -> PathBuf {
 }
 
 /// Model as shipped inside a locally-extracted NGC SDK (license-clean, trusted).
-fn sdk_local(sm: u32, file: &str) -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_default();
-    PathBuf::from(home).join(format!(
-        "maxine-dl/sdk/Audio_Effects_SDK/features/denoiser/models/sm_{sm}/{file}"
-    ))
+/// Model as shipped inside a resolved SDK root (`<sdk>/features/denoiser/models/sm_XX/`).
+/// The CDN SDK tarball carries no models, so this only hits for a local NGC SDK.
+fn sdk_local(sm: u32, file: &str) -> Option<PathBuf> {
+    Some(crate::sdk::sdk_root()?.join(format!("features/denoiser/models/sm_{sm}/{file}")))
 }
 
-fn hex(bytes: &[u8]) -> String {
+pub(crate) fn hex(bytes: &[u8]) -> String {
     use std::fmt::Write;
     let mut s = String::with_capacity(bytes.len() * 2);
     for b in bytes {
@@ -205,9 +201,10 @@ pub fn resolve_model(version: u32, sm: u32) -> Result<Option<PathBuf>> {
     }
     let file = model_file(version);
 
-    let sdk = sdk_local(sm, file);
-    if sdk.exists() {
-        return Ok(Some(sdk));
+    if let Some(sdk) = sdk_local(sm, file) {
+        if sdk.exists() {
+            return Ok(Some(sdk));
+        }
     }
 
     let cached = cache_dir(sm).join(file);
@@ -254,7 +251,7 @@ pub fn download_model(
     std::fs::create_dir_all(&dir).context("create model cache dir")?;
     let dest = dir.join(file);
     let tmp = dir.join(format!("{file}.part"));
-    let url = format!("{}/models/sm_{sm}/{file}", model_base());
+    let url = format!("{}/models/sm_{sm}/{file}", cdn_base());
 
     let client = reqwest::blocking::Client::builder()
         .timeout(None)

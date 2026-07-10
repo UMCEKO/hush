@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.umceko.hush</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>HUSH</name>
+  <summary>NVIDIA Maxine denoiser virtual microphone</summary>
+  <description>
+    <p>
+      HUSH runs NVIDIA's Maxine Audio Effects denoiser on your GPU in real time and
+      exposes the cleaned signal as a virtual PipeWire microphone you can select in
+      any app. A parametric band section removes mains hum and other tonal noise.
+    </p>
+    <p>
+      The NVIDIA Maxine runtime and per-GPU models are downloaded on first launch
+      (they are not bundled). An NVIDIA GPU (Turing / RTX 20-series or newer) is
+      required. Not affiliated with, sponsored by, or endorsed by NVIDIA.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.umceko.hush.desktop</launchable>
+  <url type="homepage">https://github.com/UMCEKO/hush</url>
+  <url type="bugtracker">https://github.com/UMCEKO/hush/issues</url>
+  <developer id="io.github.umceko">
+    <name>umceko</name>
+  </developer>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="0.2.0" date="2026-07-10">
+      <description>
+        <p>Packaged release: Flatpak, AUR, and Nix with runtime-provisioned SDK.</p>
+      </description>
+    </release>
+  </releases>
+</component>

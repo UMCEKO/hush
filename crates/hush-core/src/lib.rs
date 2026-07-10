@@ -9,6 +9,7 @@ use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 
 pub mod ipc;
 pub mod model;
+pub mod sdk;
 
 pub use ipc::NotchParam;
 

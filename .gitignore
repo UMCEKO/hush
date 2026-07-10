@@ -1,3 +1,5 @@
 /target
 /result
 /result-*
+# CDN artifacts built by scripts/make-sdk-tarballs.sh — hosted on R2, never committed
+/dist/sdk

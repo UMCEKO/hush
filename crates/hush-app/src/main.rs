@@ -45,10 +45,14 @@ static DL_PHASE: AtomicU8 = AtomicU8::new(DL_IDLE);
 static DL_GOT: AtomicU64 = AtomicU64::new(0);
 static DL_TOTAL: AtomicU64 = AtomicU64::new(0);
 static DL_ERROR: Mutex<Option<String>> = Mutex::new(None);
+// Which artifact is in flight, for the progress label.
+const STAGE_SDK: u8 = 0;
+const STAGE_MODEL: u8 = 1;
+const STAGE_UNPACK: u8 = 2;
+static DL_STAGE: AtomicU8 = AtomicU8::new(STAGE_SDK);
 
 fn ctray_path() -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_default();
-    PathBuf::from(home).join(".local/share/hush/close_to_tray")
+    hush_core::data_home().join("hush/close_to_tray")
 }
 fn load_close_to_tray() -> bool {
     ctray_path().exists()
@@ -71,8 +75,7 @@ fn running_blitz() -> bool {
 }
 
 fn flag_path() -> PathBuf {
-    let home = std::env::var("HOME").unwrap_or_default();
-    PathBuf::from(home).join(".local/share/hush/eula_accepted")
+    hush_core::data_home().join("hush/eula_accepted")
 }
 fn eula_accepted() -> bool {
     flag_path().exists()
@@ -102,10 +105,12 @@ struct Ctl {
     spectrum_in: Signal<Vec<f32>>, // original mic
 }
 
-/// The daemon is the source of truth for "needs setup": no model, an engine error,
-/// or an explicit request from the settings GPU picker.
+/// Whether to route to the setup page: the SDK runtime isn't provisioned yet (the
+/// daemon can't even exec without it), the daemon reports no model, an engine
+/// error, or the settings GPU picker asked for it.
 fn setup_needed() -> bool {
-    MODEL_MISSING.load(Ordering::Relaxed)
+    !hush_core::sdk::sdk_ready()
+        || MODEL_MISSING.load(Ordering::Relaxed)
         || SETUP_REQUESTED.load(Ordering::Relaxed)
         || ENGINE_ERROR.lock().ok().map(|g| g.is_some()).unwrap_or(false)
 }
@@ -700,10 +705,11 @@ fn unit_path() -> PathBuf {
     PathBuf::from(home).join(".config/systemd/user/hush.service")
 }
 
+/// `LD_LIBRARY_PATH` for the daemon unit — the resolved SDK's lib dirs + host
+/// driver. Empty if no SDK is installed yet (the unit still installs; the daemon
+/// stays down until setup provisions the SDK, then the unit is regenerated).
 fn sdk_lib_path() -> String {
-    let home = std::env::var("HOME").unwrap_or_default();
-    let sdk = format!("{home}/maxine-dl/sdk/Audio_Effects_SDK");
-    format!("{sdk}/nvafx/lib:{sdk}/external/cuda/lib:{sdk}/features/denoiser/lib")
+    hush_core::sdk::ld_library_path().unwrap_or_default()
 }
 
 /// Write the systemd *user* unit (no root needed — it lives under `~/.config`),
@@ -768,6 +774,11 @@ fn send_shutdown() {
 /// user unit; if that isn't active (sibling-spawned daemon), asks it to exit so
 /// `spawn_ipc_sync`'s reconnect loop respawns a fresh one.
 fn restart_engine() {
+    // Regenerate the unit so a freshly-provisioned/relocated SDK lands in the
+    // service's LD_LIBRARY_PATH before it starts.
+    if unit_path().exists() {
+        let _ = install_unit();
+    }
     let _ = std::process::Command::new("systemctl")
         .args(["--user", "restart", "hush.service"])
         .status();
@@ -826,6 +837,7 @@ fn SetupPage() -> Element {
     });
 
     let mut phase = use_signal(|| DL_PHASE.load(Ordering::Relaxed));
+    let mut stage = use_signal(|| DL_STAGE.load(Ordering::Relaxed));
     let mut got = use_signal(|| 0u64);
     let mut total = use_signal(|| 0u64);
     let mut dl_err = use_signal(|| None::<String>);
@@ -833,6 +845,7 @@ fn SetupPage() -> Element {
     use_future(move || async move {
         loop {
             phase.set(DL_PHASE.load(Ordering::Relaxed));
+            stage.set(DL_STAGE.load(Ordering::Relaxed));
             got.set(DL_GOT.load(Ordering::Relaxed));
             total.set(DL_TOTAL.load(Ordering::Relaxed));
             dl_err.set(DL_ERROR.lock().ok().and_then(|g| g.clone()));
@@ -845,7 +858,15 @@ fn SetupPage() -> Element {
     let cur = gpus.iter().find(|g| Some(&g.uuid) == sel().as_ref());
     let sm_val = cur.map(|g| g.sm).unwrap_or(0);
     let supported = cur.map(|g| g.supported()).unwrap_or(false);
-    let size_mb = model::manifest_entry(2, sm_val).map(|e| e.size / (1024 * 1024)).unwrap_or(0);
+    let sdk_ready = hush_core::sdk::sdk_ready();
+    let model_mb = model::manifest_entry(2, sm_val).map(|e| e.size / (1024 * 1024)).unwrap_or(0);
+    let sdk_mb = hush_core::sdk::RUNTIME.size / (1024 * 1024);
+    let total_dl_mb = model_mb + if sdk_ready { 0 } else { sdk_mb };
+    let stage_label = match stage() {
+        STAGE_SDK => "NVIDIA runtime",
+        STAGE_UNPACK => "Unpacking runtime",
+        _ => "Denoiser model",
+    };
     let t = total();
     let pct = if t > 0 { (got() as f64 / t as f64 * 100.0).min(100.0) } else { 0.0 };
     let got_mb = got() / (1024 * 1024);
@@ -892,10 +913,18 @@ fn SetupPage() -> Element {
 
                     if supported {
                         div { class: "card",
+                            if !sdk_ready {
+                                div { class: "setrow",
+                                    div { class: "setmeta",
+                                        div { class: "sett", "NVIDIA runtime" }
+                                        div { class: "setd", "Maxine denoiser · CUDA/TensorRT · ~{sdk_mb} MB download, ~3.6 GB installed" }
+                                    }
+                                }
+                            }
                             div { class: "setrow",
                                 div { class: "setmeta",
                                     div { class: "sett", "Denoiser model" }
-                                    div { class: "setd", "Maxine v2  ·  sm_{sm_val}  ·  {size_mb} MB" }
+                                    div { class: "setd", "Maxine v2  ·  sm_{sm_val}  ·  {model_mb} MB" }
                                 }
                                 if ph == DL_DONE {
                                     div { class: "stat on", span { class: "wdot" } "STARTING" }
@@ -906,8 +935,10 @@ fn SetupPage() -> Element {
                                 div { class: "dlnote",
                                     if ph == DL_DONE {
                                         "Verified. Starting the engine…"
+                                    } else if stage() == STAGE_UNPACK {
+                                        "Unpacking NVIDIA runtime… (this takes a moment)"
                                     } else {
-                                        "Downloading  ·  {pct:.0}%  ·  {got_mb} / {total_mb} MB"
+                                        "{stage_label}  ·  {pct:.0}%  ·  {got_mb} / {total_mb} MB"
                                     }
                                 }
                             } else {
@@ -919,10 +950,25 @@ fn SetupPage() -> Element {
                                         if let Ok(mut g) = DL_ERROR.lock() { *g = None; }
                                         DL_PHASE.store(DL_RUNNING, Ordering::Relaxed);
                                         std::thread::spawn(move || {
-                                            let r = model::download_model(2, sm_val, &|d, t| {
+                                            let progress = |d: u64, t: u64| {
                                                 DL_GOT.store(d, Ordering::Relaxed);
                                                 DL_TOTAL.store(t, Ordering::Relaxed);
-                                            });
+                                            };
+                                            // SDK first (if missing), then the per-GPU model.
+                                            let r = (|| -> anyhow::Result<()> {
+                                                if !hush_core::sdk::sdk_ready() {
+                                                    DL_STAGE.store(STAGE_SDK, Ordering::Relaxed);
+                                                    hush_core::sdk::download_sdk(&|d, t| {
+                                                        // last chunk → flip to "unpacking" while extraction runs
+                                                        if t > 0 && d >= t { DL_STAGE.store(STAGE_UNPACK, Ordering::Relaxed); }
+                                                        progress(d, t);
+                                                    })?;
+                                                }
+                                                DL_STAGE.store(STAGE_MODEL, Ordering::Relaxed);
+                                                progress(0, 0);
+                                                model::download_model(2, sm_val, &progress)?;
+                                                Ok(())
+                                            })();
                                             match r {
                                                 Ok(_) => {
                                                     SETUP_REQUESTED.store(false, Ordering::Relaxed);
@@ -936,7 +982,7 @@ fn SetupPage() -> Element {
                                             }
                                         });
                                     },
-                                    if ph == DL_FAILED { "Retry download" } else { "Download model  ·  {size_mb} MB" }
+                                    if ph == DL_FAILED { "Retry" } else { "Download & set up  ·  {total_dl_mb} MB" }
                                 }
                             }
                             if ph == DL_FAILED {
@@ -1379,6 +1425,12 @@ async fn connect_daemon() -> std::io::Result<UnixStream> {
 /// Bring the daemon up: prefer the systemd user service, else spawn a sibling
 /// `hushd` binary detached into its own process group so it outlives the GUI.
 fn start_daemon() {
+    // The daemon links the SDK at exec — don't try to start it before the runtime
+    // is provisioned, or it just fails to load and (under systemd) crash-loops.
+    let ld = match hush_core::sdk::ld_library_path() {
+        Some(p) => p,
+        None => return,
+    };
     let via_systemd = std::process::Command::new("systemctl")
         .args(["--user", "start", "hush.service"])
         .status()
@@ -1389,7 +1441,10 @@ fn start_daemon() {
     }
     if let Ok(exe) = std::env::current_exe() {
         let hushd = exe.with_file_name("hushd");
-        let _ = std::process::Command::new(hushd).process_group(0).spawn();
+        let _ = std::process::Command::new(hushd)
+            .env("LD_LIBRARY_PATH", ld)
+            .process_group(0)
+            .spawn();
     }
 }
 
