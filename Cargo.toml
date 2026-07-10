@@ -17,6 +17,7 @@ libc = "0.2"
 ksni = "0.2"
 sha2 = "0.10"
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
+png = "0.17"
 
 # UI: webview by default; Blitz (native/wgpu) via the `blitz` feature + NV_MAXINE_BLITZ=1.
 # Tracking dioxus git main (0.8.0-alpha) so the Blitz stack (blitz-paint 0.3.0-alpha.4)
