@@ -1,0 +1,46 @@
+[package]
+name = "nv-maxine"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1"
+hound = "3.5"
+pipewire = { version = "0.10", features = ["v0_3_49"] }
+ringbuf = "0.4"
+ctrlc = "3.4"
+rustfft = "6"
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "net", "io-util", "time", "sync"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+libc = "0.2"
+ksni = "0.2"
+sha2 = "0.10"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
+
+# UI: webview by default; Blitz (native/wgpu) via the `blitz` feature + NV_MAXINE_BLITZ=1.
+# Tracking dioxus git main (0.8.0-alpha) so the Blitz stack (blitz-paint 0.3.0-alpha.4)
+# carries its upstream fixes — opacity, surface-reconfigure — without local patches.
+dioxus = { path = "/home/umceko/dioxus/packages/dioxus", features = ["desktop"] }
+dioxus-native = { path = "/home/umceko/dioxus/packages/native", optional = true }
+image = { version = "=0.25.6", optional = true, default-features = false, features = ["jpeg", "png", "webp"] }
+
+[features]
+default = []
+blitz = ["dep:dioxus-native", "dep:image"]
+
+[lib]
+name = "nv_maxine"
+path = "src/lib.rs"
+
+# Bleeding-edge Blitz from a local checkout of DioxusLabs/blitz main (~/blitz),
+# relabelled 0.3.0-alpha.5 -> alpha.4 to satisfy dioxus main's exact pin. Carries
+# all of UMCEKO's merged PRs (#452,#454,#460,#463,#465,#466) which the published
+# alpha.4 crate predates, and lets us fix the renderer locally.
+[patch.crates-io]
+blitz-dom = { path = "/home/umceko/blitz/packages/blitz-dom" }
+blitz-html = { path = "/home/umceko/blitz/packages/blitz-html" }
+blitz-net = { path = "/home/umceko/blitz/packages/blitz-net" }
+blitz-paint = { path = "/home/umceko/blitz/packages/blitz-paint" }
+blitz-shell = { path = "/home/umceko/blitz/packages/blitz-shell" }
+blitz-traits = { path = "/home/umceko/blitz/packages/blitz-traits" }

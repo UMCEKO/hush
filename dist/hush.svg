@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <radialGradient id="glow" cx="0.5" cy="0.42" r="0.55">
+      <stop offset="0" stop-color="#37f2a6" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#37f2a6" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+
+  <rect width="256" height="256" rx="56" fill="#0d1317"/>
+  <rect x="3" y="3" width="250" height="250" rx="53" fill="none" stroke="#1c262c" stroke-width="2"/>
+  <rect width="256" height="256" rx="56" fill="url(#glow)"/>
+
+  <!-- noise being hushed: fading bars left, clean wave right -->
+  <g stroke="#5d6975" stroke-width="8" stroke-linecap="round">
+    <line x1="46" y1="96"  x2="46" y2="128" opacity="0.35"/>
+    <line x1="66" y1="84"  x2="66" y2="140" opacity="0.2"/>
+  </g>
+  <g stroke="#37f2a6" stroke-width="8" stroke-linecap="round">
+    <line x1="190" y1="98"  x2="190" y2="126" opacity="0.9"/>
+    <line x1="210" y1="108" x2="210" y2="116" opacity="0.6"/>
+  </g>
+
+  <!-- mic, glow pass then crisp pass -->
+  <g filter="url(#soft)" opacity="0.55">
+    <rect x="104" y="52" width="48" height="86" rx="24" fill="#37f2a6"/>
+    <path d="M84 112a44 44 0 0 0 88 0" fill="none" stroke="#37f2a6" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  <g>
+    <rect x="104" y="52" width="48" height="86" rx="24" fill="#37f2a6"/>
+    <path d="M84 112a44 44 0 0 0 88 0" fill="none" stroke="#37f2a6" stroke-width="12" stroke-linecap="round"/>
+    <line x1="128" y1="156" x2="128" y2="184" stroke="#37f2a6" stroke-width="12" stroke-linecap="round"/>
+    <line x1="98" y1="196" x2="158" y2="196" stroke="#37f2a6" stroke-width="12" stroke-linecap="round"/>
+  </g>
+</svg>

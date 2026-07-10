@@ -1,0 +1,17 @@
+[Unit]
+Description=HUSH denoiser daemon (NVIDIA Maxine virtual microphone)
+Documentation=https://github.com/umceko/nv-maxine
+# PipeWire is a user-session service, so HUSH must be one too (it needs the
+# session's PipeWire socket — it cannot run as a system/root service).
+After=pipewire.service wireplumber.service
+Wants=pipewire.service
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/hushd
+Environment=LD_LIBRARY_PATH=%h/maxine-dl/sdk/Audio_Effects_SDK/nvafx/lib:%h/maxine-dl/sdk/Audio_Effects_SDK/external/cuda/lib:%h/maxine-dl/sdk/Audio_Effects_SDK/features/denoiser/lib
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

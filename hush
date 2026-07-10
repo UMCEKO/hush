@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Launch HUSH (loads the Maxine SDK libs)
+SDK="$HOME/maxine-dl/sdk/Audio_Effects_SDK"
+export LD_LIBRARY_PATH="$SDK/external/cuda/lib:$SDK/nvafx/lib:$SDK/features/denoiser/lib"
+exec "$(dirname "$(readlink -f "$0")")/target/release/app" "$@"
