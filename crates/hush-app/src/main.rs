@@ -413,21 +413,41 @@ fn MainPage() -> Element {
     let mut power = ctl.power;
     let mut level = ctl.level;
     let on = power();
+
+    // Track the daemon connection so the toggle can warn when it's switched on
+    // with no engine behind it.
+    let mut connected = use_signal(|| CONNECTED.load(Ordering::Relaxed));
+    use_future(move || async move {
+        loop {
+            connected.set(CONNECTED.load(Ordering::Relaxed));
+            tokio::time::sleep(Duration::from_millis(400)).await;
+        }
+    });
+    // On but the engine isn't attached → the switch means nothing yet: warn (red).
+    let stalled = on && !connected();
+
     rsx! {
         div { class: "page",
             div { class: "warpwrap",
-                div { class: if on { "wbadge on" } else { "wbadge" },
+                div {
+                    class: if stalled { "wbadge warn" } else if on { "wbadge on" } else { "wbadge" },
                     span { class: "wdot" }
-                    if on { "ACTIVE" } else { "BYPASS" }
+                    if stalled { "NO ENGINE" } else if on { "ACTIVE" } else { "BYPASS" }
                 }
                 button {
-                    class: if on { "warp on" } else { "warp" },
+                    class: if stalled { "warp warn" } else if on { "warp on" } else { "warp" },
                     onclick: move |_| power.toggle(),
-                    div { class: "warp-knob", "⏻" }
+                    // Power glyph drawn purely in CSS (.warp-knob::after mask) — a ⏻ text
+                    // node renders as an uncenterable color-emoji keycap, and an inline
+                    // <svg> child gets mis-styled by this dioxus alpha's attr handling.
+                    div { class: "warp-knob" }
                 }
-                div { class: "wtitle", if on { "Noise suppression on" } else { "Passing through raw" } }
+                div { class: "wtitle",
+                    if stalled { "Engine offline" } else if on { "Noise suppression on" } else { "Passing through raw" }
+                }
                 div { class: "wsub",
-                    if on { "Your microphone is cleaned on the GPU in real time." }
+                    if stalled { "hushd isn't running — start it from Settings → Restart engine, or finish setup." }
+                    else if on { "Your microphone is cleaned on the GPU in real time." }
                     else { "HUSH is idle — your mic is unprocessed." }
                 }
             }
@@ -1209,10 +1229,21 @@ body{ margin:0; }
   box-shadow:0 0 44px rgba(55,242,166,.28), inset 0 0 22px rgba(55,242,166,.07); }
 .warp-knob{ position:absolute; top:7px; left:7px; width:96px; height:96px; border-radius:50%;
   background:#1b2128; color:var(--mut); display:flex; align-items:center; justify-content:center;
-  font-size:36px; line-height:1;
   transition:left .34s cubic-bezier(.34,1.4,.5,1), background .3s, color .3s, box-shadow .3s; }
+/* geometrically-centered power glyph: currentColor box clipped by an svg mask */
+.warp-knob::after{ content:""; width:44px; height:44px; background:currentColor;
+  -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><g fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round'><path d='M7.7 6.6 A6.6 6.6 0 1 0 16.3 6.6'/><path d='M12 3.2 L12 11.5'/></g></svg>") center/contain no-repeat;
+  mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><g fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round'><path d='M7.7 6.6 A6.6 6.6 0 1 0 16.3 6.6'/><path d='M12 3.2 L12 11.5'/></g></svg>") center/contain no-repeat; }
 .warp.on .warp-knob{ left:calc(100% - 7px - 96px);
   background:radial-gradient(circle at 35% 30%, #eafff5, var(--acc)); color:#04150d; box-shadow:0 0 26px var(--acc); }
+/* toggled on but no engine attached — same slid-right position, red instead of green */
+.wbadge.warn{ color:var(--warn); border-color:rgba(255,107,107,.45); }
+.wbadge.warn .wdot{ background:var(--warn); box-shadow:0 0 8px var(--warn); animation:pulse 1.2s infinite; }
+.warp.warn{ border-color:rgba(255,107,107,.55);
+  background:linear-gradient(180deg, rgba(255,107,107,.16), rgba(255,107,107,.05));
+  box-shadow:0 0 44px rgba(255,107,107,.26), inset 0 0 22px rgba(255,107,107,.07); }
+.warp.warn .warp-knob{ left:calc(100% - 7px - 96px);
+  background:radial-gradient(circle at 35% 30%, #ffe3e0, var(--warn)); color:#2a0d0d; box-shadow:0 0 26px var(--warn); }
 .wtitle{ font-size:17px; font-weight:600; color:var(--txt); margin-top:2px; }
 .wsub{ font-size:12px; color:#8a949d; text-align:center; line-height:1.5; max-width:300px; }
 .mrow{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; }
