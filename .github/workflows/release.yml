@@ -30,10 +30,10 @@ jobs:
           VERSION=$(grep -m1 '^version' Cargo.toml | sed -E 's/.*"([^"]+)".*/\1/')
           LAST=$(git tag -l 'v*' --sort=-v:refname | head -1)
           echo "workspace version: $VERSION, last tag: ${LAST:-none}"
-          if [ -n "$LAST" ]; then
-            if [ "v$VERSION" = "$LAST" ] || ! printf '%s\n%s\n' "${LAST#v}" "$VERSION" | sort -V -C; then
-              echo "::error::version $VERSION is not greater than the last tag $LAST"; exit 1
-            fi
+          # Fail only on a DOWNGRADE (version < last tag). Equal is allowed so a
+          # partially-failed release (e.g. the AUR job) can be retried by re-pushing.
+          if [ -n "$LAST" ] && ! printf '%s\n%s\n' "${LAST#v}" "$VERSION" | sort -V -C; then
+            echo "::error::version $VERSION is older than the last tag $LAST"; exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
