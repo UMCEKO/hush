@@ -56,17 +56,41 @@ impl Denoiser {
     pub fn new(model_path: &str, version: u32) -> Result<Self> {
         unsafe {
             let mut h: Handle = std::ptr::null_mut();
-            ck(NvAFX_CreateEffect(c"denoiser".as_ptr(), &mut h), "CreateEffect")?;
+            ck(
+                NvAFX_CreateEffect(c"denoiser".as_ptr(), &mut h),
+                "CreateEffect",
+            )?;
             let cmodel = CString::new(model_path)?;
-            ck(NvAFX_SetString(h, c"model_path".as_ptr(), cmodel.as_ptr()), "SetString(model_path)")?;
-            ck(NvAFX_SetU32(h, c"sample_rate".as_ptr(), 48_000), "SetU32(sample_rate)")?;
-            ck(NvAFX_SetU32(h, c"effect_version".as_ptr(), version), "SetU32(effect_version)")?;
-            ck(NvAFX_SetU32(h, c"num_samples_per_frame".as_ptr(), 480), "SetU32(num_samples_per_frame)")?;
-            ck(NvAFX_SetFloat(h, c"intensity_ratio".as_ptr(), 1.0), "SetFloat(intensity_ratio)")?;
+            ck(
+                NvAFX_SetString(h, c"model_path".as_ptr(), cmodel.as_ptr()),
+                "SetString(model_path)",
+            )?;
+            ck(
+                NvAFX_SetU32(h, c"sample_rate".as_ptr(), 48_000),
+                "SetU32(sample_rate)",
+            )?;
+            ck(
+                NvAFX_SetU32(h, c"effect_version".as_ptr(), version),
+                "SetU32(effect_version)",
+            )?;
+            ck(
+                NvAFX_SetU32(h, c"num_samples_per_frame".as_ptr(), 480),
+                "SetU32(num_samples_per_frame)",
+            )?;
+            ck(
+                NvAFX_SetFloat(h, c"intensity_ratio".as_ptr(), 1.0),
+                "SetFloat(intensity_ratio)",
+            )?;
             ck(NvAFX_Load(h), "Load")?;
             let mut ns: c_uint = 0;
-            ck(NvAFX_GetU32(h, c"num_samples_per_frame".as_ptr(), &mut ns), "GetU32(num_samples_per_frame)")?;
-            Ok(Self { h, frame: ns as usize })
+            ck(
+                NvAFX_GetU32(h, c"num_samples_per_frame".as_ptr(), &mut ns),
+                "GetU32(num_samples_per_frame)",
+            )?;
+            Ok(Self {
+                h,
+                frame: ns as usize,
+            })
         }
     }
 
@@ -88,7 +112,13 @@ impl Denoiser {
             let in_ptrs: [*const c_float; 1] = [input.as_ptr()];
             let out_ptrs: [*mut c_float; 1] = [output.as_mut_ptr()];
             ck(
-                NvAFX_Run(self.h, in_ptrs.as_ptr(), out_ptrs.as_ptr(), self.frame as c_uint, 1),
+                NvAFX_Run(
+                    self.h,
+                    in_ptrs.as_ptr(),
+                    out_ptrs.as_ptr(),
+                    self.frame as c_uint,
+                    1,
+                ),
                 "Run",
             )
         }

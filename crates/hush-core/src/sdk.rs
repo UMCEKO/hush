@@ -89,13 +89,15 @@ pub fn lib_dirs(root: &Path) -> Vec<PathBuf> {
 /// driver dir (libcuda, harmless if absent), then any inherited value.
 pub fn ld_library_path() -> Option<String> {
     let root = sdk_root()?;
-    let mut parts: Vec<String> =
-        lib_dirs(&root).iter().map(|p| p.to_string_lossy().into_owned()).collect();
+    let mut parts: Vec<String> = lib_dirs(&root)
+        .iter()
+        .map(|p| p.to_string_lossy().into_owned())
+        .collect();
     parts.push("/run/opengl-driver/lib".to_string());
-    if let Some(existing) = std::env::var_os("LD_LIBRARY_PATH") {
-        if !existing.is_empty() {
-            parts.push(existing.to_string_lossy().into_owned());
-        }
+    if let Some(existing) = std::env::var_os("LD_LIBRARY_PATH")
+        && !existing.is_empty()
+    {
+        parts.push(existing.to_string_lossy().into_owned());
     }
     Some(parts.join(":"))
 }
@@ -147,7 +149,10 @@ pub fn download_sdk(progress: &(dyn Fn(u64, u64) + Send + Sync)) -> Result<PathB
     let got = hex(&hasher.finalize());
     if !got.eq_ignore_ascii_case(RUNTIME.sha256) || (RUNTIME.size != 0 && done != RUNTIME.size) {
         let _ = std::fs::remove_file(&tmp);
-        bail!("SDK integrity check failed — expected {}, got {got}", RUNTIME.sha256);
+        bail!(
+            "SDK integrity check failed — expected {}, got {got}",
+            RUNTIME.sha256
+        );
     }
 
     // Extract into a staging dir, then atomically swap into place.
@@ -197,9 +202,16 @@ mod tests {
         // no NVAFX_SDK / legacy dir in the fake env → starts unresolved
         assert!(sdk_root().is_none(), "expected no SDK before download");
         let root = download_sdk(&|_, _| {}).expect("sdk download+unpack");
-        assert!(has_runtime(&root), "unpacked tree must have libnv_audiofx.so.2");
+        assert!(
+            has_runtime(&root),
+            "unpacked tree must have libnv_audiofx.so.2"
+        );
         assert!(root.join(".verified").exists(), "marker written");
-        assert_eq!(sdk_root().as_deref(), Some(root.as_path()), "resolves to install");
+        assert_eq!(
+            sdk_root().as_deref(),
+            Some(root.as_path()),
+            "resolves to install"
+        );
         assert!(sdk_ready());
         // ld_library_path includes the three lib dirs
         let ld = ld_library_path().unwrap();

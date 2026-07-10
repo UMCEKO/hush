@@ -27,20 +27,90 @@ pub struct ModelEntry {
 
 /// Integrity manifest for every mirrored `.trtpkg` (sha256 of the R2-served bytes).
 pub const MANIFEST: [ModelEntry; 14] = [
-    ModelEntry { sm: 75, version: 1, sha256: "5c27cffcdafcd13d992b94f11a74eb460b36a2eedd2387cdbd2b2a7b9aade3aa", size: 35_700_064 },
-    ModelEntry { sm: 75, version: 2, sha256: "7d6d45eadabdb5a2d2392c33e46923799daff00e6e117c7be682dd52935e74ba", size: 144_193_184 },
-    ModelEntry { sm: 80, version: 1, sha256: "22505838467b209db641ba8e3ec471676fe4b52f3097ab05b268519695891be1", size: 42_147_536 },
-    ModelEntry { sm: 80, version: 2, sha256: "1b1d4b52e10dc016add2cf13d3f773034b965c387b4a54ec53de7a6dbb8c002f", size: 344_588_448 },
-    ModelEntry { sm: 86, version: 1, sha256: "aebb929a64ce9a1445d70a0421a27b22f3766273f522e6fb78ed1aa977bc7b37", size: 37_063_024 },
-    ModelEntry { sm: 86, version: 2, sha256: "1fd2be8e16200e2f02bbf01f54e74e9d7ddabb54492b351810450f7a4e03315f", size: 126_368_160 },
-    ModelEntry { sm: 89, version: 1, sha256: "1fae019ccd115f4790a77a51be26b396c18be86c49a7961f35fcfed43fdd8998", size: 40_689_296 },
-    ModelEntry { sm: 89, version: 2, sha256: "99939fbef29bf1dfa00259ed4e04884541656e6821eaa00e91d8716340d8c0a6", size: 138_570_352 },
-    ModelEntry { sm: 90, version: 1, sha256: "308d7fbe427b9298a7b7c99849d2b8a5ab1969a5e71e6328679eb5821cd23a9a", size: 38_731_616 },
-    ModelEntry { sm: 90, version: 2, sha256: "7e7e81bb86331d41635c9295afc524a1a6e1a406cf4009105348d68d865ab8c7", size: 118_882_944 },
-    ModelEntry { sm: 100, version: 1, sha256: "f81c23da2f0111fd471ceef114fde0db745b750b6cbcb56183b371576195bf60", size: 51_323_872 },
-    ModelEntry { sm: 100, version: 2, sha256: "c1468ea6703942270f90f913e595cec3f4355f8da3ab8fe66a7ebf4bdbb127a1", size: 118_019_344 },
-    ModelEntry { sm: 120, version: 1, sha256: "6bedf4eaaeeb01abe5d160670524d2cfb50aa869c5bea75850a55720b4bd710a", size: 61_749_312 },
-    ModelEntry { sm: 120, version: 2, sha256: "b5c3554abcda0670e6c3ae4f55d85c5af885efb5cee32734c3d0bdbce88771fb", size: 124_105_408 },
+    ModelEntry {
+        sm: 75,
+        version: 1,
+        sha256: "5c27cffcdafcd13d992b94f11a74eb460b36a2eedd2387cdbd2b2a7b9aade3aa",
+        size: 35_700_064,
+    },
+    ModelEntry {
+        sm: 75,
+        version: 2,
+        sha256: "7d6d45eadabdb5a2d2392c33e46923799daff00e6e117c7be682dd52935e74ba",
+        size: 144_193_184,
+    },
+    ModelEntry {
+        sm: 80,
+        version: 1,
+        sha256: "22505838467b209db641ba8e3ec471676fe4b52f3097ab05b268519695891be1",
+        size: 42_147_536,
+    },
+    ModelEntry {
+        sm: 80,
+        version: 2,
+        sha256: "1b1d4b52e10dc016add2cf13d3f773034b965c387b4a54ec53de7a6dbb8c002f",
+        size: 344_588_448,
+    },
+    ModelEntry {
+        sm: 86,
+        version: 1,
+        sha256: "aebb929a64ce9a1445d70a0421a27b22f3766273f522e6fb78ed1aa977bc7b37",
+        size: 37_063_024,
+    },
+    ModelEntry {
+        sm: 86,
+        version: 2,
+        sha256: "1fd2be8e16200e2f02bbf01f54e74e9d7ddabb54492b351810450f7a4e03315f",
+        size: 126_368_160,
+    },
+    ModelEntry {
+        sm: 89,
+        version: 1,
+        sha256: "1fae019ccd115f4790a77a51be26b396c18be86c49a7961f35fcfed43fdd8998",
+        size: 40_689_296,
+    },
+    ModelEntry {
+        sm: 89,
+        version: 2,
+        sha256: "99939fbef29bf1dfa00259ed4e04884541656e6821eaa00e91d8716340d8c0a6",
+        size: 138_570_352,
+    },
+    ModelEntry {
+        sm: 90,
+        version: 1,
+        sha256: "308d7fbe427b9298a7b7c99849d2b8a5ab1969a5e71e6328679eb5821cd23a9a",
+        size: 38_731_616,
+    },
+    ModelEntry {
+        sm: 90,
+        version: 2,
+        sha256: "7e7e81bb86331d41635c9295afc524a1a6e1a406cf4009105348d68d865ab8c7",
+        size: 118_882_944,
+    },
+    ModelEntry {
+        sm: 100,
+        version: 1,
+        sha256: "f81c23da2f0111fd471ceef114fde0db745b750b6cbcb56183b371576195bf60",
+        size: 51_323_872,
+    },
+    ModelEntry {
+        sm: 100,
+        version: 2,
+        sha256: "c1468ea6703942270f90f913e595cec3f4355f8da3ab8fe66a7ebf4bdbb127a1",
+        size: 118_019_344,
+    },
+    ModelEntry {
+        sm: 120,
+        version: 1,
+        sha256: "6bedf4eaaeeb01abe5d160670524d2cfb50aa869c5bea75850a55720b4bd710a",
+        size: 61_749_312,
+    },
+    ModelEntry {
+        sm: 120,
+        version: 2,
+        sha256: "b5c3554abcda0670e6c3ae4f55d85c5af885efb5cee32734c3d0bdbce88771fb",
+        size: 124_105_408,
+    },
 ];
 
 pub fn manifest_entry(version: u32, sm: u32) -> Option<&'static ModelEntry> {
@@ -54,7 +124,11 @@ pub(crate) fn cdn_base() -> String {
 
 /// Stable model filename for a denoiser version (2 = v2 48k, else v1 48k).
 pub fn model_file(version: u32) -> &'static str {
-    if version == 2 { "denoiser_v2_48k.trtpkg" } else { "denoiser_48k.trtpkg" }
+    if version == 2 {
+        "denoiser_v2_48k.trtpkg"
+    } else {
+        "denoiser_48k.trtpkg"
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -79,12 +153,16 @@ impl GpuInfo {
 /// this runs on the host (the sandbox has no `nvidia-smi` binary).
 pub fn list_gpus() -> Vec<GpuInfo> {
     let out = crate::host_command("nvidia-smi")
-        .args(["--query-gpu=index,uuid,name,compute_cap", "--format=csv,noheader,nounits"])
+        .args([
+            "--query-gpu=index,uuid,name,compute_cap",
+            "--format=csv,noheader,nounits",
+        ])
         .output();
     match out {
-        Ok(o) if o.status.success() => {
-            String::from_utf8_lossy(&o.stdout).lines().filter_map(parse_gpu_row).collect()
-        }
+        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout)
+            .lines()
+            .filter_map(parse_gpu_row)
+            .collect(),
         _ => Vec::new(),
     }
 }
@@ -100,7 +178,12 @@ fn parse_gpu_row(line: &str) -> Option<GpuInfo> {
     let name = parts[2..parts.len() - 1].join(", ");
     let (maj, min) = parts[parts.len() - 1].split_once('.')?;
     let sm = maj.trim().parse::<u32>().ok()? * 10 + min.trim().parse::<u32>().ok()?;
-    Some(GpuInfo { index, uuid, name, sm })
+    Some(GpuInfo {
+        index,
+        uuid,
+        name,
+        sm,
+    })
 }
 
 use crate::data_home;
@@ -127,10 +210,10 @@ pub fn persist_gpu_uuid(uuid: &str) {
 
 /// The GPU to run on: the persisted pick if it still exists, else GPU 0.
 pub fn effective_gpu(gpus: &[GpuInfo]) -> Option<&GpuInfo> {
-    if let Some(uuid) = selected_gpu_uuid() {
-        if let Some(g) = gpus.iter().find(|g| g.uuid == uuid) {
-            return Some(g);
-        }
+    if let Some(uuid) = selected_gpu_uuid()
+        && let Some(g) = gpus.iter().find(|g| g.uuid == uuid)
+    {
+        return Some(g);
     }
     gpus.first()
 }
@@ -140,9 +223,11 @@ pub fn effective_gpu(gpus: &[GpuInfo]) -> Option<&GpuInfo> {
 // ---------------------------------------------------------------------------
 
 fn cache_home() -> PathBuf {
-    std::env::var_os("XDG_CACHE_HOME").map(PathBuf::from).unwrap_or_else(|| {
-        PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(".cache")
-    })
+    std::env::var_os("XDG_CACHE_HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(".cache")
+        })
 }
 
 fn cache_dir(sm: u32) -> PathBuf {
@@ -183,7 +268,9 @@ fn verified(path: &Path, entry: &ModelEntry) -> bool {
         Ok(m) if m.len() == entry.size => {}
         _ => return false,
     }
-    sha256_file(path).map(|h| h.eq_ignore_ascii_case(entry.sha256)).unwrap_or(false)
+    sha256_file(path)
+        .map(|h| h.eq_ignore_ascii_case(entry.sha256))
+        .unwrap_or(false)
 }
 
 /// Resolve a usable model path WITHOUT downloading. `Ok(None)` = "needs download".
@@ -201,10 +288,10 @@ pub fn resolve_model(version: u32, sm: u32) -> Result<Option<PathBuf>> {
     }
     let file = model_file(version);
 
-    if let Some(sdk) = sdk_local(sm, file) {
-        if sdk.exists() {
-            return Ok(Some(sdk));
-        }
+    if let Some(sdk) = sdk_local(sm, file)
+        && sdk.exists()
+    {
+        return Ok(Some(sdk));
     }
 
     let cached = cache_dir(sm).join(file);
@@ -334,16 +421,28 @@ mod tests {
         }
         let (ver, sm) = (2u32, 89u32);
         let _ = std::fs::remove_dir_all(cache_dir(sm));
-        assert!(matches!(resolve_model(ver, sm), Ok(None)), "no model expected pre-download");
+        assert!(
+            matches!(resolve_model(ver, sm), Ok(None)),
+            "no model expected pre-download"
+        );
 
         let p = download_model(ver, sm, &|_, _| {}).expect("download should succeed");
         assert!(p.exists());
         let e = manifest_entry(ver, sm).unwrap();
-        assert!(verified(&p, e), "downloaded file must match the manifest hash");
-        assert!(matches!(resolve_model(ver, sm), Ok(Some(_))), "resolve must find verified cache");
+        assert!(
+            verified(&p, e),
+            "downloaded file must match the manifest hash"
+        );
+        assert!(
+            matches!(resolve_model(ver, sm), Ok(Some(_))),
+            "resolve must find verified cache"
+        );
 
         std::fs::write(&p, b"corrupt").unwrap();
-        assert!(matches!(resolve_model(ver, sm), Ok(None)), "corrupt cache must be evicted");
+        assert!(
+            matches!(resolve_model(ver, sm), Ok(None)),
+            "corrupt cache must be evicted"
+        );
         assert!(!p.exists(), "evicted file must be deleted");
     }
 }

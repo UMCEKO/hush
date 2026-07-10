@@ -3,14 +3,14 @@
 //! uses the native Blitz/wgpu renderer (build with `--features blitz`).
 
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU8, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 
 use std::os::unix::process::CommandExt;
 
 use dioxus::prelude::*;
-use hush_core::ipc::{socket_path, ClientMsg, StateFrame};
+use hush_core::ipc::{ClientMsg, StateFrame, socket_path};
 use hush_core::model::{self, GpuInfo};
 use hush_core::{Controls, NotchParam, SPECTRUM_BIN_HZ, SPECTRUM_BINS};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -112,7 +112,11 @@ fn setup_needed() -> bool {
     !hush_core::sdk::sdk_ready()
         || MODEL_MISSING.load(Ordering::Relaxed)
         || SETUP_REQUESTED.load(Ordering::Relaxed)
-        || ENGINE_ERROR.lock().ok().map(|g| g.is_some()).unwrap_or(false)
+        || ENGINE_ERROR
+            .lock()
+            .ok()
+            .map(|g| g.is_some())
+            .unwrap_or(false)
 }
 
 #[component]
@@ -159,13 +163,23 @@ fn Shell() -> Element {
     let notches = use_signal(Vec::<NotchParam>::new);
     let spectrum = use_signal(|| vec![0.0f32; SPECTRUM_BINS]);
     let spectrum_in = use_signal(|| vec![0.0f32; SPECTRUM_BINS]);
-    let ctl = use_context_provider(|| Ctl { power, level, notches, spectrum, spectrum_in });
+    let ctl = use_context_provider(|| Ctl {
+        power,
+        level,
+        notches,
+        spectrum,
+        spectrum_in,
+    });
     let page = use_signal(|| Page::Main);
 
     // Drive the local mirror from the UI; the IPC thread forwards it to hushd.
     use_effect(move || {
         if let Some(c) = CONTROLS.get() {
-            c.set_intensity(if (ctl.power)() { (ctl.level)() as f32 / 100.0 } else { 0.0 });
+            c.set_intensity(if (ctl.power)() {
+                (ctl.level)() as f32 / 100.0
+            } else {
+                0.0
+            });
         }
     });
     use_effect(move || {
@@ -210,7 +224,12 @@ fn Shell() -> Element {
 }
 
 #[component]
-fn NavTab(mut page: Signal<Page>, target: Page, icon: &'static str, label: &'static str) -> Element {
+fn NavTab(
+    mut page: Signal<Page>,
+    target: Page,
+    icon: &'static str,
+    label: &'static str,
+) -> Element {
     let active = page() == target;
     rsx! {
         button {
@@ -255,7 +274,11 @@ fn tray_icons() -> Vec<ksni::Icon> {
             for px in rgba.chunks_exact(4) {
                 data.extend_from_slice(&[px[3], px[0], px[1], px[2]]); // RGBA -> ARGB
             }
-            Some(ksni::Icon { width: w as i32, height: h as i32, data })
+            Some(ksni::Icon {
+                width: w as i32,
+                height: h as i32,
+                data,
+            })
         })
         .collect()
 }
@@ -457,7 +480,12 @@ fn pos_to_freq(p: f32) -> f32 {
 fn set_mains(mut notches: Signal<Vec<NotchParam>>, base: f32) {
     notches.set(
         (1..=4)
-            .map(|h| NotchParam { freq: base * h as f32, q: 18.0, gain: -30.0, enabled: true })
+            .map(|h| NotchParam {
+                freq: base * h as f32,
+                q: 18.0,
+                gain: -30.0,
+                enabled: true,
+            })
             .collect(),
     );
 }
@@ -488,13 +516,20 @@ fn FreqPage() -> Element {
     // WITHOUT bands — open contour line; the gap down to the fill = what the bands remove
     let mut sp_in = String::new();
     for (i, &m) in spec_in.iter().enumerate() {
-        sp_in.push_str(&format!("{}{:.1},{:.1} ", if i == 0 { "M" } else { "L" }, sx(i), sy(m)));
+        sp_in.push_str(&format!(
+            "{}{:.1},{:.1} ",
+            if i == 0 { "M" } else { "L" },
+            sx(i),
+            sy(m)
+        ));
     }
     let sp_in = sp_in.trim().to_string();
 
     // vertical octave guides
-    let hz_grid: Vec<f32> =
-        [50.0f32, 100.0, 200.0, 500.0].iter().map(|&f| fx(f) / 100.0 * vw).collect();
+    let hz_grid: Vec<f32> = [50.0f32, 100.0, 200.0, 500.0]
+        .iter()
+        .map(|&f| fx(f) / 100.0 * vw)
+        .collect();
 
     // a marker per band: (key, center%, label%, enabled, Hz). The real effect is the
     // measured gap between the two traces — no fake "range" box that contradicts it.
@@ -762,11 +797,11 @@ fn set_autostart(on: bool) {
 /// it back). Used when there's no systemd unit to `restart`.
 fn send_shutdown() {
     use std::io::Write;
-    if let Ok(mut s) = std::os::unix::net::UnixStream::connect(socket_path()) {
-        if let Ok(mut buf) = serde_json::to_vec(&ClientMsg::Shutdown) {
-            buf.push(b'\n');
-            let _ = s.write_all(&buf);
-        }
+    if let Ok(mut s) = std::os::unix::net::UnixStream::connect(socket_path())
+        && let Ok(mut buf) = serde_json::to_vec(&ClientMsg::Shutdown)
+    {
+        buf.push(b'\n');
+        let _ = s.write_all(&buf);
     }
 }
 
@@ -859,7 +894,9 @@ fn SetupPage() -> Element {
     let sm_val = cur.map(|g| g.sm).unwrap_or(0);
     let supported = cur.map(|g| g.supported()).unwrap_or(false);
     let sdk_ready = hush_core::sdk::sdk_ready();
-    let model_mb = model::manifest_entry(2, sm_val).map(|e| e.size / (1024 * 1024)).unwrap_or(0);
+    let model_mb = model::manifest_entry(2, sm_val)
+        .map(|e| e.size / (1024 * 1024))
+        .unwrap_or(0);
     let sdk_mb = hush_core::sdk::RUNTIME.size / (1024 * 1024);
     let total_dl_mb = model_mb + if sdk_ready { 0 } else { sdk_mb };
     let stage_label = match stage() {
@@ -868,7 +905,11 @@ fn SetupPage() -> Element {
         _ => "Denoiser model",
     };
     let t = total();
-    let pct = if t > 0 { (got() as f64 / t as f64 * 100.0).min(100.0) } else { 0.0 };
+    let pct = if t > 0 {
+        (got() as f64 / t as f64 * 100.0).min(100.0)
+    } else {
+        0.0
+    };
     let got_mb = got() / (1024 * 1024);
     let total_mb = t / (1024 * 1024);
     let rows: Vec<(String, String, u32, bool, bool)> = gpus
@@ -1525,6 +1566,7 @@ fn acquire_single_instance() -> Option<std::fs::File> {
     use std::os::unix::io::AsRawFd;
     let f = std::fs::OpenOptions::new()
         .create(true)
+        .truncate(false) // it's a lock file — content is irrelevant, never truncate
         .write(true)
         .open(runtime_dir().join("hush-gui.lock"))
         .ok()?;
@@ -1589,7 +1631,9 @@ fn main() {
         dioxus_native::launch_cfg(
             App,
             vec![],
-            vec![Box::new(dioxus_native::Config::new().with_window_attributes(attrs))],
+            vec![Box::new(
+                dioxus_native::Config::new().with_window_attributes(attrs),
+            )],
         );
         return;
     }
@@ -1601,5 +1645,7 @@ fn main() {
         .with_decorations(false)
         .with_resizable(false)
         .with_window_icon(window_icon());
-    dioxus::LaunchBuilder::desktop().with_cfg(Config::new().with_window(win)).launch(App);
+    dioxus::LaunchBuilder::desktop()
+        .with_cfg(Config::new().with_window(win))
+        .launch(App);
 }

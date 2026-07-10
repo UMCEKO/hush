@@ -1,0 +1,153 @@
+name: Release
+
+# Push to the `release` branch to cut a release. The Cargo.toml workspace version
+# must be strictly greater than the last v* tag; CI then tags v<version>, builds
+# binaries, and updates every channel (GitHub Release, Flatpak repo, AUR).
+on:
+  push:
+    branches: [release]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+env:
+  CARGO_TERM_COLOR: always
+  NVAFX_LINK_DIR: ${{ github.workspace }}/afx-link
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - id: v
+        name: Version must exceed the last tag
+        run: |
+          VERSION=$(grep -m1 '^version' Cargo.toml | sed -E 's/.*"([^"]+)".*/\1/')
+          LAST=$(git tag -l 'v*' --sort=-v:refname | head -1)
+          echo "workspace version: $VERSION, last tag: ${LAST:-none}"
+          if [ -n "$LAST" ]; then
+            if [ "v$VERSION" = "$LAST" ] || ! printf '%s\n%s\n' "${LAST#v}" "$VERSION" | sort -V -C; then
+              echo "::error::version $VERSION is not greater than the last tag $LAST"; exit 1
+            fi
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: guard
+    runs-on: ubuntu-latest
+    container: ubuntu:22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: System deps
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            build-essential curl ca-certificates pkg-config clang \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libsoup-3.0-dev \
+            libpipewire-0.3-dev libdbus-1-dev libssl-dev libxdo-dev zstd git
+      - name: Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.85.0
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - uses: Swatinem/rust-cache@v2
+      - name: Fetch link libs
+        run: |
+          mkdir -p "$NVAFX_LINK_DIR"
+          curl -fsSL https://cdn.hush.umceko.com/sdk/2.1.0/afx-link-x86_64.tar.zst | zstd -d | tar -x -C "$NVAFX_LINK_DIR"
+      - name: Build release
+        run: cargo build --release --locked -p hush-app -p hush-engine --bin hush --bin hushd
+      - name: Stage tarball
+        run: |
+          V=${{ needs.guard.outputs.version }}
+          D="hush_v${V}_x86_64-linux"
+          mkdir -p "$D"
+          cp target/release/hush target/release/hushd "$D/"
+          cp dist/io.github.umceko.hush.desktop dist/hush.svg dist/NVIDIA_NOTICE.txt dist/FONT_LICENSES.txt LICENSE "$D/"
+          tar -czf "${D}.tar.gz" "$D"
+          sha256sum "${D}.tar.gz" > "${D}.tar.gz.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-tarball
+          path: hush_v*_x86_64-linux.tar.gz*
+
+  release:
+    needs: [guard, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/download-artifact@v4
+        with: { name: release-tarball }
+      - name: Tag + GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V=${{ needs.guard.outputs.version }}
+          git tag "v$V" && git push origin "v$V"
+          gh release create "v$V" hush_v*_x86_64-linux.tar.gz* \
+            --title "HUSH v$V" --generate-notes
+
+  flatpak:
+    needs: [guard, release]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/andyholmes/flatter/gnome:49
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: release-tarball }
+      - name: Unpack binaries into the manifest dir
+        run: |
+          V=${{ needs.guard.outputs.version }}
+          tar -xzf "hush_v${V}_x86_64-linux.tar.gz"
+          cp "hush_v${V}_x86_64-linux/hush" "hush_v${V}_x86_64-linux/hushd" packaging/flatpak/
+      - name: Import GPG key
+        run: echo "${{ secrets.FLATPAK_GPG_PRIVATE_KEY }}" | gpg --import
+      - uses: andyholmes/flatter@main
+        with:
+          files: packaging/flatpak/io.github.umceko.hush.json
+          gpg-sign: ${{ vars.FLATPAK_GPG_FINGERPRINT }}
+          upload-pages-artifact: true
+      - uses: actions/deploy-pages@v4
+
+  aur:
+    needs: [guard, release]
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tooling + non-root builder
+        run: |
+          pacman -Syu --noconfirm --needed base-devel git openssh pacman-contrib
+          useradd -m builder
+      - name: SSH to AUR
+        run: |
+          install -d -m700 ~/.ssh
+          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur && chmod 600 ~/.ssh/aur
+          printf 'Host aur.archlinux.org\n  IdentityFile ~/.ssh/aur\n  StrictHostKeyChecking accept-new\n  User aur\n' > ~/.ssh/config
+      - name: Push both packages
+        run: |
+          V=${{ needs.guard.outputs.version }}
+          TARURL="https://github.com/UMCEKO/hush/releases/download/v${V}/hush_v${V}_x86_64-linux.tar.gz"
+          BINSHA=$(curl -fsSL "${TARURL}.sha256" | cut -d' ' -f1)
+          for pkg in hush-bin hush; do
+            git clone "ssh://aur@aur.archlinux.org/${pkg}.git" "aur-$pkg"
+            cp "packaging/aur/$pkg/PKGBUILD" "aur-$pkg/PKGBUILD"
+            cd "aur-$pkg"
+            sed -i "s/^pkgver=.*/pkgver=$V/" PKGBUILD
+            if [ "$pkg" = "hush-bin" ]; then
+              sed -i "s/^sha256sums=.*/sha256sums=('$BINSHA')/" PKGBUILD
+            fi
+            chown -R builder .
+            su builder -c "makepkg --printsrcinfo" > .SRCINFO
+            git config user.name "umceko"; git config user.email "support@stockimg.ai"
+            git add PKGBUILD .SRCINFO
+            git commit -m "Update to $V" && GIT_SSH_COMMAND="ssh -F ~/.ssh/config" git push
+            cd ..
+          done

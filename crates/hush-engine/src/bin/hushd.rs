@@ -46,7 +46,10 @@ fn main() -> Result<()> {
     let controls = Controls::new();
 
     // Resolve the model for the selected GPU's arch — no network here.
-    match gpu.as_ref().map(|g| model::resolve_model(MODEL_VERSION, g.sm)) {
+    match gpu
+        .as_ref()
+        .map(|g| model::resolve_model(MODEL_VERSION, g.sm))
+    {
         Some(Ok(Some(path))) => {
             let controls = controls.clone();
             let err_sink = state.engine_error.clone();
@@ -74,7 +77,9 @@ fn main() -> Result<()> {
     }
 
     // Serve the control socket regardless of engine state.
-    let rt = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?;
     rt.block_on(serve(controls, state))
 }
 

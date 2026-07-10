@@ -14,12 +14,19 @@ fn main() -> Result<()> {
     let version: u32 = args.get(3).and_then(|s| s.parse().ok()).unwrap_or(2);
     let home = std::env::var("HOME")?;
     let model = std::env::var("NVAFX_MODEL").unwrap_or_else(|_| {
-        let f = if version == 2 { "denoiser_v2_48k_4480" } else { "denoiser_48k_6656" };
+        let f = if version == 2 {
+            "denoiser_v2_48k_4480"
+        } else {
+            "denoiser_48k_6656"
+        };
         format!("{home}/maxine-dl/sdk/Audio_Effects_SDK/features/denoiser/models/sm_89/{f}.trtpkg")
     });
 
     let mut den = Denoiser::new(&model, version)?;
-    println!("Maxine denoiser loaded from Rust (v{version}), frame = {}", den.frame);
+    println!(
+        "Maxine denoiser loaded from Rust (v{version}), frame = {}",
+        den.frame
+    );
 
     // decode -> mono f32 [-1,1]
     let mut rd = WavReader::open(&args[1])?;
@@ -29,13 +36,18 @@ fn main() -> Result<()> {
         SampleFormat::Float => rd.samples::<f32>().map(|s| s.unwrap()).collect(),
         SampleFormat::Int => {
             let sc = (1i64 << (spec.bits_per_sample - 1)) as f32;
-            rd.samples::<i32>().map(|s| s.unwrap() as f32 / sc).collect()
+            rd.samples::<i32>()
+                .map(|s| s.unwrap() as f32 / sc)
+                .collect()
         }
     };
     let mono: Vec<f32> = if ch <= 1 {
         inter
     } else {
-        inter.chunks(ch).map(|c| c.iter().sum::<f32>() / ch as f32).collect()
+        inter
+            .chunks(ch)
+            .map(|c| c.iter().sum::<f32>() / ch as f32)
+            .collect()
     };
 
     let f = den.frame;
@@ -44,8 +56,8 @@ fn main() -> Result<()> {
     let mut out = Vec::with_capacity(mono.len() + f);
     let mut i = 0;
     while i < mono.len() {
-        for k in 0..f {
-            inbuf[k] = mono.get(i + k).copied().unwrap_or(0.0);
+        for (k, slot) in inbuf.iter_mut().enumerate() {
+            *slot = mono.get(i + k).copied().unwrap_or(0.0);
         }
         den.process(&inbuf, &mut outbuf)?;
         out.extend_from_slice(&outbuf);
@@ -53,7 +65,12 @@ fn main() -> Result<()> {
     }
     out.truncate(mono.len());
 
-    let os = WavSpec { channels: 1, sample_rate: 48_000, bits_per_sample: 32, sample_format: SampleFormat::Float };
+    let os = WavSpec {
+        channels: 1,
+        sample_rate: 48_000,
+        bits_per_sample: 32,
+        sample_format: SampleFormat::Float,
+    };
     let mut wr = WavWriter::create(&args[2], os)?;
     for s in &out {
         wr.write_sample(*s)?;
@@ -62,6 +79,9 @@ fn main() -> Result<()> {
 
     let irms = (mono.iter().map(|v| v * v).sum::<f32>() / mono.len() as f32).sqrt();
     let orms = (out.iter().map(|v| v * v).sum::<f32>() / out.len() as f32).sqrt();
-    println!("denoised {} -> {}  | in rms={irms:.5}  out rms={orms:.5}", args[1], args[2]);
+    println!(
+        "denoised {} -> {}  | in rms={irms:.5}  out rms={orms:.5}",
+        args[1], args[2]
+    );
     Ok(())
 }

@@ -15,7 +15,8 @@ fn main() {
     let src = assets.join("fonts.css");
     println!("cargo:rerun-if-changed={}", src.display());
     let css = fs::read_to_string(&src).unwrap_or_else(|e| panic!("read {}: {e}", src.display()));
-    fs::write(out_dir.join("fonts.css"), bake_font_css(&css, &fonts)).expect("write baked fonts.css");
+    fs::write(out_dir.join("fonts.css"), bake_font_css(&css, &fonts))
+        .expect("write baked fonts.css");
 }
 
 fn bake_font_css(css: &str, fonts: &Path) -> String {
@@ -27,7 +28,9 @@ fn bake_font_css(css: &str, fonts: &Path) -> String {
     while let Some(idx) = rest.find(PREFIX) {
         out.push_str(&rest[..idx]);
         let after = &rest[idx + PREFIX.len()..];
-        let end = after.find(')').unwrap_or_else(|| panic!("unterminated `{PREFIX}` in fonts.css"));
+        let end = after
+            .find(')')
+            .unwrap_or_else(|| panic!("unterminated `{PREFIX}` in fonts.css"));
         let file = &after[..end];
         let path = fonts.join(file);
         println!("cargo:rerun-if-changed={}", path.display());

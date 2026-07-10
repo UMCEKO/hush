@@ -28,7 +28,7 @@
       homeManagerModules.default = import ./nix/hm-module.nix self;
 
       devShells.${system}.default = pkgs.mkShell {
-        nativeBuildInputs = with pkgs; [ pkg-config wrapGAppsHook3 rustPlatform.bindgenHook rustc cargo ];
+        nativeBuildInputs = with pkgs; [ pkg-config wrapGAppsHook3 rustPlatform.bindgenHook rustc cargo clippy rustfmt ];
         buildInputs = buildDeps;
         # Dev builds link the engine against the locally-extracted SDK; packaged
         # builds use NVAFX_LINK_DIR from the CDN link tarball instead.

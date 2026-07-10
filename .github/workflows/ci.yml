@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  # Where the CDN link libs (libnv_audiofx + libcudart) get unpacked for linking.
+  NVAFX_LINK_DIR: ${{ github.workspace }}/afx-link
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    container: ubuntu:22.04 # has libwebkit2gtk-4.1; immune to runner-image churn
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: System deps
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            build-essential curl ca-certificates pkg-config clang \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libsoup-3.0-dev \
+            libpipewire-0.3-dev libdbus-1-dev libssl-dev libxdo-dev zstd git
+
+      - name: Rust toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.85.0 --component rustfmt clippy
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Fetch link libs
+        run: |
+          mkdir -p "$NVAFX_LINK_DIR"
+          curl -fsSL https://cdn.hush.umceko.com/sdk/2.1.0/afx-link-x86_64.tar.zst \
+            | zstd -d | tar -x -C "$NVAFX_LINK_DIR"
+
+      - name: Format
+        run: cargo fmt --all --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Build
+        run: cargo build --workspace --locked
+
+      - name: Test (core — GPU-free)
+        run: cargo test -p hush-core --locked

@@ -86,7 +86,10 @@ fn audio_format_param() -> Vec<u8> {
         id: pw::spa::param::ParamType::EnumFormat.as_raw(),
         properties: info.into(),
     };
-    PodSerializer::serialize(std::io::Cursor::new(Vec::new()), &Value::Object(obj)).unwrap().0.into_inner()
+    PodSerializer::serialize(std::io::Cursor::new(Vec::new()), &Value::Object(obj))
+        .unwrap()
+        .0
+        .into_inner()
 }
 
 fn pactl(args: &[&str]) -> Result<String> {
@@ -105,10 +108,10 @@ pub fn unload_virtual_mic() {
 fn clean_stale_modules() {
     if let Ok(list) = pactl(&["list", "short", "modules"]) {
         for line in list.lines() {
-            if line.contains(SINK) {
-                if let Some(id) = line.split('\t').next() {
-                    let _ = Command::new("pactl").args(["unload-module", id]).status();
-                }
+            if line.contains(SINK)
+                && let Some(id) = line.split('\t').next()
+            {
+                let _ = Command::new("pactl").args(["unload-module", id]).status();
             }
         }
     }
@@ -227,7 +230,8 @@ pub fn run(
                             let mut mag_in = [0f32; SPECTRUM_BINS];
                             let mut mag_out = [0f32; SPECTRUM_BINS];
                             for i in 0..FFT_SIZE {
-                                buf[i] = Complex::new(ring_in[(rpos + i) % FFT_SIZE] * hann[i], 0.0);
+                                buf[i] =
+                                    Complex::new(ring_in[(rpos + i) % FFT_SIZE] * hann[i], 0.0);
                             }
                             fft.process(&mut buf);
                             let mut fmax = 1e-9f32;
@@ -238,7 +242,8 @@ pub fn run(
                                 }
                             }
                             for i in 0..FFT_SIZE {
-                                buf[i] = Complex::new(ring_out[(rpos + i) % FFT_SIZE] * hann[i], 0.0);
+                                buf[i] =
+                                    Complex::new(ring_out[(rpos + i) % FFT_SIZE] * hann[i], 0.0);
                             }
                             fft.process(&mut buf);
                             for i in 0..SPECTRUM_BINS {
@@ -281,7 +286,9 @@ pub fn run(
     let _capl = cap
         .add_local_listener_with_user_data(prod_raw)
         .process(|stream, prod: &mut HeapProd<f32>| {
-            let Some(mut b) = stream.dequeue_buffer() else { return };
+            let Some(mut b) = stream.dequeue_buffer() else {
+                return;
+            };
             let datas = b.datas_mut();
             if datas.is_empty() {
                 return;
@@ -314,7 +321,9 @@ pub fn run(
     let _playl = play
         .add_local_listener_with_user_data(play_data)
         .process(|stream, (cons, scratch): &mut (HeapCons<f32>, Vec<f32>)| {
-            let Some(mut b) = stream.dequeue_buffer() else { return };
+            let Some(mut b) = stream.dequeue_buffer() else {
+                return;
+            };
             let req = b.requested() as usize;
             let datas = b.datas_mut();
             if datas.is_empty() {
@@ -331,9 +340,9 @@ pub fn run(
                     *v = 0.0;
                 }
                 let _ = cons.pop_slice(&mut scratch[..nf]);
-                for i in 0..nf {
+                for (i, &val) in scratch[..nf].iter().enumerate() {
                     let s = i * SAMPLE;
-                    slice[s..s + SAMPLE].copy_from_slice(&scratch[i].to_le_bytes());
+                    slice[s..s + SAMPLE].copy_from_slice(&val.to_le_bytes());
                 }
                 nf
             } else {
@@ -351,7 +360,9 @@ pub fn run(
     cap.connect(
         spa::utils::Direction::Input,
         None,
-        pw::stream::StreamFlags::AUTOCONNECT | pw::stream::StreamFlags::MAP_BUFFERS | pw::stream::StreamFlags::RT_PROCESS,
+        pw::stream::StreamFlags::AUTOCONNECT
+            | pw::stream::StreamFlags::MAP_BUFFERS
+            | pw::stream::StreamFlags::RT_PROCESS,
         &mut cp,
     )?;
     let play_fmt = audio_format_param();
@@ -377,8 +388,12 @@ pub fn run(
         }
     });
 
-    let _ = Command::new("pw-metadata").args(["-n", "settings", "0", "clock.force-rate", "48000"]).status();
-    let _ = Command::new("pw-metadata").args(["-n", "settings", "0", "clock.force-quantum", "0"]).status();
+    let _ = Command::new("pw-metadata")
+        .args(["-n", "settings", "0", "clock.force-rate", "48000"])
+        .status();
+    let _ = Command::new("pw-metadata")
+        .args(["-n", "settings", "0", "clock.force-quantum", "0"])
+        .status();
 
     mainloop.run();
     Ok(())

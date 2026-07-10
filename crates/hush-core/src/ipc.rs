@@ -43,7 +43,7 @@ pub struct StateFrame {
     pub intensity: f32,
     pub notches: Vec<NotchParam>,
     pub model_version: u32,
-    pub spectrum: Vec<f32>,    // adjusted output (post denoise+notch)
+    pub spectrum: Vec<f32>, // adjusted output (post denoise+notch)
     #[serde(default)]
     pub spectrum_in: Vec<f32>, // original mic, same scale as `spectrum`
     /// No model resolved — the GUI must download one before the engine can run.

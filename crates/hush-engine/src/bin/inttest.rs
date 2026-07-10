@@ -22,12 +22,21 @@ fn main() -> Result<()> {
         SampleFormat::Float => rd.samples::<f32>().map(|s| s.unwrap()).collect(),
         SampleFormat::Int => {
             let sc = (1i64 << (spec.bits_per_sample - 1)) as f32;
-            rd.samples::<i32>().map(|s| s.unwrap() as f32 / sc).collect()
+            rd.samples::<i32>()
+                .map(|s| s.unwrap() as f32 / sc)
+                .collect()
         }
     };
-    let mono: Vec<f32> = if ch <= 1 { inter } else { inter.chunks(ch).map(|c| c.iter().sum::<f32>() / ch as f32).collect() };
+    let mono: Vec<f32> = if ch <= 1 {
+        inter
+    } else {
+        inter
+            .chunks(ch)
+            .map(|c| c.iter().sum::<f32>() / ch as f32)
+            .collect()
+    };
 
-    let mut run = |den: &mut Denoiser, inten: f32| {
+    let run = |den: &mut Denoiser, inten: f32| {
         den.set_intensity(inten).unwrap();
         let (mut ai, mut ao, mut n) = (0f64, 0f64, 0u32);
         let mut inb = vec![0f32; f];
@@ -46,7 +55,10 @@ fn main() -> Result<()> {
 
     for inten in [1.0f32, 0.0, 0.5, 1.0] {
         let (i, o) = run(&mut den, inten);
-        println!("intensity={inten:.1}: in_rms={i:.5} out_rms={o:.5}  out/in={:.2}", o / i);
+        println!(
+            "intensity={inten:.1}: in_rms={i:.5} out_rms={o:.5}  out/in={:.2}",
+            o / i
+        );
     }
     Ok(())
 }
