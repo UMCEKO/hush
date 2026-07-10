@@ -47,9 +47,14 @@ jobs:
         run: |
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-            build-essential curl ca-certificates pkg-config clang \
+            software-properties-common build-essential curl ca-certificates pkg-config clang \
             libwebkit2gtk-4.1-dev libgtk-3-dev libsoup-3.0-dev \
-            libpipewire-0.3-dev libdbus-1-dev libssl-dev libxdo-dev zstd git
+            libdbus-1-dev libssl-dev libxdo-dev zstd git
+          # jammy ships pipewire 0.3.48; the libspa 0.10 crate needs a modern spa ABI.
+          # Pull current pipewire from the upstream PPA (keeps jammy's portable glibc 2.35).
+          add-apt-repository -y ppa:pipewire-debian/pipewire-upstream
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y libpipewire-0.3-dev libspa-0.2-dev
       - name: Rust
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.95.0
