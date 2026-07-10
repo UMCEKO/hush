@@ -86,12 +86,14 @@ rustPlatform.buildRustPackage {
 
   # hushd dlopens the CUDA/TensorRT stack + denoiser feature lib from the SDK the
   # app provisions at runtime (found via LD_LIBRARY_PATH), so no SDK rpath is baked.
-  # It still needs libstdc++ (for the NVIDIA blobs) and the host driver's libcuda.
+  # It still needs libstdc++ (for the NVIDIA blobs) and the host driver's libcuda —
+  # and crucially those are needed by libnv_audiofx (a *dependency*), so the rpath
+  # must be DT_RPATH (transitive), not DT_RUNPATH: hence --force-rpath.
   dontPatchELF = true;
   postFixup = ''
     for f in "$out/bin/hushd" "$out/bin/.hushd-wrapped"; do
       if [ -f "$f" ] && isELF "$f"; then
-        patchelf --add-rpath "${lib.getLib stdenv.cc.cc}/lib:/run/opengl-driver/lib" "$f"
+        patchelf --force-rpath --add-rpath "${lib.getLib stdenv.cc.cc}/lib:/run/opengl-driver/lib" "$f"
       fi
     done
   '';
