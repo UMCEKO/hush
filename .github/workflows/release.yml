@@ -146,10 +146,9 @@ jobs:
           # sanity: key must be non-empty and parse as a valid private key
           test -s ~/.ssh/aur && ssh-keygen -y -f ~/.ssh/aur >/dev/null && echo "key OK"
       - name: Push both packages
-        env:
-          # Every git op (clone AND push) uses the AUR key explicitly.
-          GIT_SSH_COMMAND: "ssh -i /root/.ssh/aur -o IdentitiesOnly=yes -o UserKnownHostsFile=/root/.ssh/known_hosts"
         run: |
+          # Container jobs use HOME=/github/home, not /root — resolve the key there.
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/aur -o IdentitiesOnly=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts"
           git config --global --add safe.directory '*'  # .git gets chowned to builder below
           V=${{ needs.guard.outputs.version }}
           TARURL="https://github.com/UMCEKO/hush/releases/download/v${V}/hush_v${V}_x86_64-linux.tar.gz"
