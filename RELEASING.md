@@ -48,7 +48,7 @@ done
 ## Install (users)
 
 - **AUR:** `paru -S hush-mic-bin` (prebuilt) or `paru -S hush-mic` (from source).
-- **Flatpak:** `flatpak remote-add --if-not-exists hush https://umceko.github.io/hush/hush.flatpakrepo && flatpak install hush io.github.umceko.hush`
+- **Flatpak:** `flatpak remote-add --if-not-exists hush https://umceko.github.io/hush/index.flatpakrepo && flatpak install hush io.github.umceko.hush`
 - **Nix:** `nix profile install github:UMCEKO/hush`, or the home-manager module
   (`services.hush.enable = true`).
 
