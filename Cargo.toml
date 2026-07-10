@@ -1,47 +1,36 @@
-[package]
-name = "nv-maxine"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+resolver = "2"
+members = ["crates/hush-core", "crates/hush-engine", "crates/hush-app"]
 
-[dependencies]
+[workspace.package]
+version = "0.2.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/UMCEKO/hush"
+
+[workspace.dependencies]
 anyhow = "1"
-hound = "3.5"
-pipewire = { version = "0.10", features = ["v0_3_49"] }
-ringbuf = "0.4"
-ctrlc = "3.4"
-rustfft = "6"
-tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "net", "io-util", "time", "sync"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 libc = "0.2"
-ksni = "0.2"
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "net", "io-util", "time", "sync"] }
 sha2 = "0.10"
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
-png = "0.17"
 
-# UI: webview by default; Blitz (native/wgpu) via the `blitz` feature + NV_MAXINE_BLITZ=1.
-# Tracking dioxus git main (0.8.0-alpha) so the Blitz stack (blitz-paint 0.3.0-alpha.4)
-# carries its upstream fixes — opacity, surface-reconfigure — without local patches.
-dioxus = { path = "/home/umceko/dioxus/packages/dioxus", features = ["desktop"] }
-dioxus-native = { path = "/home/umceko/dioxus/packages/native", optional = true }
-image = { version = "=0.25.6", optional = true, default-features = false, features = ["jpeg", "png", "webp"] }
+hush-core = { path = "crates/hush-core" }
+hush-engine = { path = "crates/hush-engine" }
 
-[features]
-default = []
-blitz = ["dep:dioxus-native", "dep:image"]
+# Bleeding-edge Dioxus (Blitz 0.3.0-alpha.5 stack) pinned to UMCEKO forks so
+# off-machine builds (CI, Nix, AUR) reproduce the exact alpha revs without any
+# local checkout. The dioxus PR branch moves, so we pin by full SHA on our fork.
+dioxus = { git = "https://github.com/UMCEKO/dioxus", rev = "555b9516b0b70800c13f0f44e51c4f13d53c15ef", features = ["desktop"] }
+dioxus-native = { git = "https://github.com/UMCEKO/dioxus", rev = "555b9516b0b70800c13f0f44e51c4f13d53c15ef" }
 
-[lib]
-name = "nv_maxine"
-path = "src/lib.rs"
-
-# Bleeding-edge Blitz from a local checkout of DioxusLabs/blitz main (~/blitz),
-# relabelled 0.3.0-alpha.5 -> alpha.4 to satisfy dioxus main's exact pin. Carries
-# all of UMCEKO's merged PRs (#452,#454,#460,#463,#465,#466) which the published
-# alpha.4 crate predates, and lets us fix the renderer locally.
+# Blitz alpha.5 with UMCEKO's merged PRs (incl. the button-center fix on hush-stable).
 [patch.crates-io]
-blitz-dom = { path = "/home/umceko/blitz/packages/blitz-dom" }
-blitz-html = { path = "/home/umceko/blitz/packages/blitz-html" }
-blitz-net = { path = "/home/umceko/blitz/packages/blitz-net" }
-blitz-paint = { path = "/home/umceko/blitz/packages/blitz-paint" }
-blitz-shell = { path = "/home/umceko/blitz/packages/blitz-shell" }
-blitz-traits = { path = "/home/umceko/blitz/packages/blitz-traits" }
+blitz-dom = { git = "https://github.com/UMCEKO/blitz", rev = "56ec6bff4260039bdb205fb0e3b4f547a783958d" }
+blitz-html = { git = "https://github.com/UMCEKO/blitz", rev = "56ec6bff4260039bdb205fb0e3b4f547a783958d" }
+blitz-net = { git = "https://github.com/UMCEKO/blitz", rev = "56ec6bff4260039bdb205fb0e3b4f547a783958d" }
+blitz-paint = { git = "https://github.com/UMCEKO/blitz", rev = "56ec6bff4260039bdb205fb0e3b4f547a783958d" }
+blitz-shell = { git = "https://github.com/UMCEKO/blitz", rev = "56ec6bff4260039bdb205fb0e3b4f547a783958d" }
+blitz-traits = { git = "https://github.com/UMCEKO/blitz", rev = "56ec6bff4260039bdb205fb0e3b4f547a783958d" }

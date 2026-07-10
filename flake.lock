@@ -1,37 +1,5 @@
 {
   "nodes": {
-    "blitz-src": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1781801621,
-        "narHash": "sha256-sygNvgWcwGuntaoMULKdBk1Ran9hCPIOfFzXJMfXJ6Q=",
-        "ref": "refs/heads/pr/button-vertical-center",
-        "rev": "56ec6bff4260039bdb205fb0e3b4f547a783958d",
-        "revCount": 1558,
-        "type": "git",
-        "url": "file:///home/umceko/blitz"
-      },
-      "original": {
-        "type": "git",
-        "url": "file:///home/umceko/blitz"
-      }
-    },
-    "dioxus-src": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1781542306,
-        "narHash": "sha256-4f4I7FeAGrt20WHY9NH9pJTXuLeB5fYYe6O+m7c4ZOY=",
-        "ref": "refs/heads/pr5630",
-        "rev": "555b9516b0b70800c13f0f44e51c4f13d53c15ef",
-        "revCount": 7167,
-        "type": "git",
-        "url": "file:///home/umceko/dioxus"
-      },
-      "original": {
-        "type": "git",
-        "url": "file:///home/umceko/dioxus"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1783224372,
@@ -48,25 +16,9 @@
         "type": "github"
       }
     },
-    "nvafx-sdk": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1781744677,
-        "narHash": "sha256-c3GuN1iBmNByIo8F4/2rkT+eoCSJqzDndTtSiZtPkL0=",
-        "path": "/home/umceko/maxine-dl/sdk/Audio_Effects_SDK",
-        "type": "path"
-      },
-      "original": {
-        "path": "/home/umceko/maxine-dl/sdk/Audio_Effects_SDK",
-        "type": "path"
-      }
-    },
     "root": {
       "inputs": {
-        "blitz-src": "blitz-src",
-        "dioxus-src": "dioxus-src",
-        "nixpkgs": "nixpkgs",
-        "nvafx-sdk": "nvafx-sdk"
+        "nixpkgs": "nixpkgs"
       }
     }
   },

@@ -1,0 +1,20 @@
+[package]
+name = "hush-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+name = "hush_engine"
+
+[dependencies]
+hush-core.workspace = true
+anyhow.workspace = true
+serde_json.workspace = true
+pipewire = { version = "0.10", features = ["v0_3_49"] }
+ringbuf = "0.4"
+ctrlc = "3.4"
+rustfft = "6"
+hound = "3.5"
+tokio.workspace = true

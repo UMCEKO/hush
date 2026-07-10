@@ -1,0 +1,27 @@
+[package]
+name = "hush-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "hush"
+path = "src/main.rs"
+
+[dependencies]
+hush-core.workspace = true
+anyhow.workspace = true
+serde_json.workspace = true
+libc.workspace = true
+tokio.workspace = true
+png = "0.17"
+ksni = "0.2"
+dioxus.workspace = true
+dioxus-native = { workspace = true, optional = true }
+image = { version = "=0.25.6", optional = true, default-features = false, features = ["jpeg", "png", "webp"] }
+
+# UI: webview by default; Blitz (native/wgpu) via the `blitz` feature + NV_MAXINE_BLITZ=1.
+[features]
+default = []
+blitz = ["dep:dioxus-native", "dep:image"]

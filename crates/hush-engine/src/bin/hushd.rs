@@ -14,8 +14,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use anyhow::Result;
-use nv_maxine::ipc::{ClientMsg, StateFrame, socket_path};
-use nv_maxine::{Controls, SPECTRUM_BINS, model};
+use hush_core::ipc::{ClientMsg, StateFrame, socket_path};
+use hush_core::{Controls, SPECTRUM_BINS, model};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
 
@@ -51,7 +51,7 @@ fn main() -> Result<()> {
             let controls = controls.clone();
             let err_sink = state.engine_error.clone();
             std::thread::spawn(move || {
-                if let Err(e) = nv_maxine::engine::run(MODEL_VERSION, path, controls, err_sink) {
+                if let Err(e) = hush_engine::engine::run(MODEL_VERSION, path, controls, err_sink) {
                     // PipeWire/audio setup failure — exit so systemd retries it.
                     eprintln!("hushd: engine error: {e}");
                     std::process::exit(1);
@@ -154,7 +154,7 @@ fn apply(line: &str, controls: &Controls) {
         Ok(ClientMsg::Intensity { value }) => controls.set_intensity(value),
         Ok(ClientMsg::SetNotches { notches }) => controls.set_notches(notches),
         Ok(ClientMsg::Shutdown) => {
-            nv_maxine::engine::unload_virtual_mic();
+            hush_engine::engine::unload_virtual_mic();
             std::process::exit(0);
         }
         Err(_) => {}

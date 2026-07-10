@@ -19,7 +19,8 @@ use spa::param::audio::{AudioFormat, AudioInfoRaw, MAX_CHANNELS};
 use spa::pod::serialize::PodSerializer;
 use spa::pod::{Object, Pod, Value};
 
-use crate::{Controls, Denoiser, NotchParam, SPECTRUM_BINS};
+use crate::Denoiser;
+use hush_core::{Controls, NotchParam, SPECTRUM_BINS};
 
 const RATE: u32 = 48_000;
 const HOP: usize = 480;

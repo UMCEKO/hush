@@ -10,9 +10,9 @@ use std::time::Duration;
 use std::os::unix::process::CommandExt;
 
 use dioxus::prelude::*;
-use nv_maxine::ipc::{socket_path, ClientMsg, StateFrame};
-use nv_maxine::model::{self, GpuInfo};
-use nv_maxine::{Controls, NotchParam, SPECTRUM_BIN_HZ, SPECTRUM_BINS};
+use hush_core::ipc::{socket_path, ClientMsg, StateFrame};
+use hush_core::model::{self, GpuInfo};
+use hush_core::{Controls, NotchParam, SPECTRUM_BIN_HZ, SPECTRUM_BINS};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
@@ -217,8 +217,8 @@ fn NavTab(mut page: Signal<Page>, target: Page, icon: &'static str, label: &'sta
 }
 
 // ---- app + tray icon, rendered from dist/hush.svg ----
-const ICON_PNG_256: &[u8] = include_bytes!("../../dist/hush-256.png");
-const ICON_PNG_64: &[u8] = include_bytes!("../../dist/hush-64.png");
+const ICON_PNG_256: &[u8] = include_bytes!("../../../dist/hush-256.png");
+const ICON_PNG_64: &[u8] = include_bytes!("../../../dist/hush-64.png");
 
 /// Decode an 8-bit RGBA PNG → (width, height, rgba bytes).
 fn decode_rgba(bytes: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
@@ -1047,7 +1047,7 @@ fn SettingsPage() -> Element {
                 p { class: "setabout",
                     "HUSH runs NVIDIA's Maxine Audio Effects denoiser on your GPU, used under the NVIDIA Software License Agreement and Open Model License. Not affiliated with, sponsored by, or endorsed by NVIDIA."
                 }
-                div { class: "setd", "Model  Maxine v2    ·    Engine  hushd    ·    Build  HUSH 0.1" }
+                div { class: "setd", "Model  Maxine v2    ·    Engine  hushd    ·    Build  HUSH {env!(\"CARGO_PKG_VERSION\")}" }
             }
         }
     }

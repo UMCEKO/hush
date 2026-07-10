@@ -1,7 +1,7 @@
 //! Does intensity change take effect live (after Load)? 0.0 should ~= passthrough.
 use anyhow::Result;
 use hound::{SampleFormat, WavReader};
-use nv_maxine::Denoiser;
+use hush_engine::Denoiser;
 
 fn rms(b: &[f32]) -> f64 {
     (b.iter().map(|x| (x * x) as f64).sum::<f64>() / b.len() as f64).sqrt()

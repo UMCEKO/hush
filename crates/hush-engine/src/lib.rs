@@ -1,69 +1,17 @@
-//! Safe-ish Rust bindings to NVIDIA's Maxine Audio Effects (AFX) denoiser.
+//! GPU-linked half of HUSH: safe-ish Rust bindings to NVIDIA's Maxine Audio
+//! Effects (AFX) denoiser, plus the real-time engine. Links `libnv_audiofx` +
+//! `libcudart` (see build.rs) — so only the daemon (`hushd`) and dev tools depend
+//! on this crate; the GUI links `hush-core` only.
 //!
 //! FFI over the small C API in `nvAudioEffects.h`. The user supplies the SDK +
-//! model (downloaded from NGC under their own license); we never ship them.
+//! model (downloaded at runtime under their own license); we never ship them.
 
 use std::ffi::CString;
 use std::os::raw::{c_char, c_float, c_int, c_uint, c_void};
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 pub mod engine;
-pub mod ipc;
-pub mod model;
-
-use std::sync::Mutex;
-use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
-
-pub use ipc::NotchParam;
-
-/// Quick-add presets the UI exposes (50 Hz + 60 Hz mains harmonics).
-pub const NOTCH_FREQS: [f32; 8] = [50.0, 60.0, 100.0, 120.0, 150.0, 180.0, 200.0, 240.0];
-/// Spectrum bins shown to the UI (≈ 0..1000 Hz, where hum lives).
-pub const SPECTRUM_BINS: usize = 86;
-/// Hz per spectrum bin (48000 / 4096 FFT).
-pub const SPECTRUM_BIN_HZ: f32 = 48_000.0 / 4096.0;
-
-/// Live, lock-light control surface shared between the UI and the audio engine.
-pub struct Controls {
-    intensity: AtomicU32,                  // f32 bits, 0.0..1.0
-    notches: Mutex<Vec<NotchParam>>,       // active parametric notches
-    notch_gen: AtomicU64,                  // bumped on every notch change (cheap RT poll)
-    pub spectrum: Mutex<Vec<f32>>,         // post-band magnitudes, 0..1 (denoised + notch)
-    pub spectrum_in: Mutex<Vec<f32>>,      // pre-band magnitudes, 0..1 (denoised, same scale)
-}
-
-impl Controls {
-    pub fn new() -> std::sync::Arc<Self> {
-        std::sync::Arc::new(Self {
-            intensity: AtomicU32::new(1.0f32.to_bits()),
-            notches: Mutex::new(Vec::new()),
-            notch_gen: AtomicU64::new(0),
-            spectrum: Mutex::new(vec![0.0; SPECTRUM_BINS]),
-            spectrum_in: Mutex::new(vec![0.0; SPECTRUM_BINS]),
-        })
-    }
-    pub fn set_intensity(&self, ratio: f32) {
-        self.intensity.store(ratio.clamp(0.0, 1.0).to_bits(), Ordering::Relaxed);
-    }
-    pub fn intensity(&self) -> f32 {
-        f32::from_bits(self.intensity.load(Ordering::Relaxed))
-    }
-    /// Replace the active notch set (UI/daemon side).
-    pub fn set_notches(&self, notches: Vec<NotchParam>) {
-        if let Ok(mut g) = self.notches.lock() {
-            *g = notches;
-        }
-        self.notch_gen.fetch_add(1, Ordering::Relaxed);
-    }
-    /// Generation counter — compare cheaply on the audio thread; only lock on change.
-    pub fn notch_gen(&self) -> u64 {
-        self.notch_gen.load(Ordering::Relaxed)
-    }
-    pub fn notches_snapshot(&self) -> Vec<NotchParam> {
-        self.notches.lock().map(|g| g.clone()).unwrap_or_default()
-    }
-}
 
 pub type Handle = *mut c_void;
 

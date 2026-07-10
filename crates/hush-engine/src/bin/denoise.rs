@@ -3,7 +3,7 @@
 
 use anyhow::Result;
 use hound::{SampleFormat, WavReader, WavSpec, WavWriter};
-use nv_maxine::Denoiser;
+use hush_engine::Denoiser;
 
 fn main() -> Result<()> {
     let args: Vec<String> = std::env::args().collect();
