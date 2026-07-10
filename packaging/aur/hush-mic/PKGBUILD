@@ -7,7 +7,7 @@ arch=('x86_64')
 url="https://github.com/UMCEKO/hush"
 license=('MIT')
 depends=('webkit2gtk-4.1' 'gtk3' 'libsoup3' 'glib-networking' 'pipewire' 'libpulse' 'dbus' 'gcc-libs')
-makedepends=('rust>=1.85' 'cargo' 'pkgconf' 'clang')
+makedepends=('rust>=1.88' 'cargo' 'pkgconf' 'clang')
 optdepends=('nvidia-utils: nvidia-smi GPU detection (required at runtime)')
 provides=('hush-mic')
 # 'hush'/'hush-bin' (an unrelated Lua shell) also install /usr/bin/hush

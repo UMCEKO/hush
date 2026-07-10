@@ -5,7 +5,7 @@ pkgbase = hush-mic
 	url = https://github.com/UMCEKO/hush
 	arch = x86_64
 	license = MIT
-	makedepends = rust>=1.85
+	makedepends = rust>=1.88
 	makedepends = cargo
 	makedepends = pkgconf
 	makedepends = clang
