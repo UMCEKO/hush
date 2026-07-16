@@ -13,9 +13,24 @@
     "--device=dri",
     "--share=network",
     "--talk-name=org.kde.StatusNotifierWatcher",
+    "--own-name=org.kde.StatusNotifierItem-2-1",
     "--talk-name=org.freedesktop.Flatpak"
   ],
   "modules": [
+    {
+      "name": "libxdo",
+      "buildsystem": "simple",
+      "build-commands": [
+        "make -j$(nproc) PREFIX=/app installlib"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/jordansissel/xdotool/releases/download/v3.20211022.1/xdotool-3.20211022.1.tar.gz",
+          "sha256": "96f0facfde6d78eacad35b91b0f46fecd0b35e474c03e00e30da3fdd345f9ada"
+        }
+      ]
+    },
     {
       "name": "hush",
       "buildsystem": "simple",
