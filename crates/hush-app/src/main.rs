@@ -10,7 +10,7 @@ use std::time::Duration;
 use std::os::unix::process::CommandExt;
 
 use dioxus::prelude::*;
-use hush_core::ipc::{ClientMsg, StateFrame, socket_path};
+use hush_core::ipc::{ClientMsg, MicInfo, StateFrame, socket_path};
 use hush_core::model::{self, GpuInfo};
 use hush_core::{Controls, NotchParam, SPECTRUM_BIN_HZ, SPECTRUM_BINS};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
@@ -21,10 +21,35 @@ static CONTROLS: OnceLock<Arc<Controls>> = OnceLock::new();
 static CONNECTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 /// When set, the ✕ button hides the window to the tray instead of quitting.
 static CLOSE_TO_TRAY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-/// Pinged when another launch — or the tray "Show" item — asks us to surface.
-/// Event-driven (no polling); `notify_one` stores a permit if the UI isn't yet
-/// awaiting, so a wake-up is never lost or raced.
-static SHOW_NOTIFY: tokio::sync::Notify = tokio::sync::Notify::const_new();
+thread_local! {
+    /// GTK handle of the main window, stashed on the GTK main thread at startup
+    /// so `set_window_visible_from_any_thread` closures can reach it.
+    static GTK_WINDOW: std::cell::RefCell<Option<gtk::ApplicationWindow>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+/// Show/hide the window at the GTK layer, callable from any thread (tray, GUI
+/// socket listener). This must NOT go through dioxus state or futures: while
+/// the window is hidden WebKit stops flushing edits, which stalls the vdom
+/// polling loop — a component future waiting for a "show" ping would never be
+/// polled again, stranding the window in the tray forever.
+fn set_window_visible_from_any_thread(visible: bool) {
+    glib::MainContext::default().invoke(move || {
+        use gtk::prelude::*;
+        GTK_WINDOW.with(|w| {
+            if let Some(w) = &*w.borrow() {
+                eprintln!("hush: gtk set visible={visible} (was {})", w.is_visible());
+                if visible {
+                    w.show_all();
+                    w.deiconify();
+                    w.present();
+                } else {
+                    w.hide();
+                }
+            }
+        });
+    });
+}
 
 // ---- setup / model-provisioning state, mirrored from the daemon's StateFrame ----
 /// The daemon has no usable model — route the GUI to the setup/download page.
@@ -33,6 +58,12 @@ static MODEL_MISSING: AtomicBool = AtomicBool::new(false);
 static ENGINE_ERROR: Mutex<Option<String>> = Mutex::new(None);
 /// GPU the daemon reports running on (for the settings row).
 static GPU_NAME: Mutex<Option<String>> = Mutex::new(None);
+/// Capture devices + active pick, mirrored from the daemon's `StateFrame`.
+static MICS: Mutex<Vec<MicInfo>> = Mutex::new(Vec::new());
+static ACTIVE_MIC: Mutex<Option<String>> = Mutex::new(None);
+/// The user picked a mic this session — push it on (re)connect instead of
+/// adopting the daemon's persisted choice.
+static MIC_TOUCHED: AtomicBool = AtomicBool::new(false);
 /// Set by the settings GPU picker to force the setup page (new arch needs a model).
 static SETUP_REQUESTED: AtomicBool = AtomicBool::new(false);
 
@@ -298,14 +329,14 @@ impl ksni::Tray for HushTray {
         tray_icons()
     }
     fn activate(&mut self, _x: i32, _y: i32) {
-        SHOW_NOTIFY.notify_one();
+        set_window_visible_from_any_thread(true);
     }
     fn menu(&self) -> Vec<ksni::MenuItem<Self>> {
         use ksni::menu::StandardItem;
         vec![
             StandardItem {
                 label: "Show HUSH".into(),
-                activate: Box::new(|_: &mut Self| SHOW_NOTIFY.notify_one()),
+                activate: Box::new(|_: &mut Self| set_window_visible_from_any_thread(true)),
                 ..Default::default()
             }
             .into(),
@@ -327,14 +358,10 @@ fn TrayHost() -> Element {
     use_hook(|| {
         ksni::TrayService::new(HushTray).spawn();
     });
-    use_future(|| async move {
-        loop {
-            SHOW_NOTIFY.notified().await;
-            let w = dioxus::desktop::window();
-            w.window.set_minimized(false);
-            w.window.set_visible(true);
-            w.window.set_focus();
-        }
+    use_hook(|| {
+        use dioxus::desktop::tao::platform::unix::WindowExtUnix;
+        let gw = dioxus::desktop::window().window.gtk_window().clone();
+        GTK_WINDOW.with(|w| *w.borrow_mut() = Some(gw));
     });
     rsx! {}
 }
@@ -463,6 +490,19 @@ fn MainPage() -> Element {
                     oninput: move |e| { if let Ok(v) = e.value().parse::<u32>() { level.set(v); } }
                 }
                 div { class: "scale", span { "RAW" } span { "MAX" } }
+            }
+            div { class: "card",
+                div { class: "setrow",
+                    div { class: "setmeta",
+                        div { class: "sett", "Engine" }
+                        div { class: "setd", "hushd denoiser service" }
+                    }
+                    div { class: if connected() { "stat on" } else { "stat" },
+                        span { class: "wdot" }
+                        if connected() { "CONNECTED" } else { "OFFLINE" }
+                    }
+                }
+                MicRow {}
             }
             div { class: "foot",
                 span { class: "fdot" }
@@ -1066,16 +1106,64 @@ fn SetupPage() -> Element {
     }
 }
 
-/// Settings + QoL: engine status, launch-at-login, restart, about.
+/// Capture-device picker (shared by Power + Settings): lists the daemon's
+/// enumerated sources and applies a pick live — the daemon persists it and
+/// reroutes the capture stream without an engine restart.
 #[component]
-fn SettingsPage() -> Element {
-    let mut connected = use_signal(|| CONNECTED.load(Ordering::Relaxed));
+fn MicRow() -> Element {
+    let mut mics = use_signal(Vec::<MicInfo>::new);
+    let mut active = use_signal(|| ACTIVE_MIC.lock().ok().and_then(|g| g.clone()));
     use_future(move || async move {
         loop {
-            connected.set(CONNECTED.load(Ordering::Relaxed));
-            tokio::time::sleep(Duration::from_millis(500)).await;
+            mics.set(MICS.lock().map(|g| g.clone()).unwrap_or_default());
+            active.set(ACTIVE_MIC.lock().ok().and_then(|g| g.clone()));
+            tokio::time::sleep(Duration::from_millis(700)).await;
         }
     });
+    let cur = active();
+    let missing = cur
+        .as_ref()
+        .filter(|c| !mics().iter().any(|m| &&m.name == c))
+        .cloned();
+    rsx! {
+        div { class: "setrow",
+            div { class: "setmeta",
+                div { class: "sett", "Microphone" }
+                div { class: "setd", "The input HUSH cleans" }
+            }
+            select {
+                class: "mselect",
+                onchange: move |e| {
+                    let v = e.value();
+                    let name = (v != "__default").then_some(v);
+                    MIC_TOUCHED.store(true, Ordering::Relaxed);
+                    active.set(name.clone());
+                    if let Ok(mut g) = ACTIVE_MIC.lock() {
+                        *g = name.clone();
+                    }
+                    if let Some(c) = CONTROLS.get() {
+                        c.set_mic(name);
+                    }
+                },
+                option { value: "__default", selected: cur.is_none(), "System default" }
+                if let Some(m) = missing {
+                    option { value: "{m}", selected: true, "{m} (unplugged)" }
+                }
+                for m in mics() {
+                    option {
+                        value: "{m.name}",
+                        selected: cur.as_deref() == Some(m.name.as_str()),
+                        "{m.desc}"
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Settings + QoL: mic pick, GPU, launch-at-login, restart, about.
+#[component]
+fn SettingsPage() -> Element {
     let mut autostart = use_signal(service_enabled);
     let mut to_tray = use_signal(|| CLOSE_TO_TRAY.load(Ordering::Relaxed));
     let gpus = use_hook(model::list_gpus);
@@ -1084,21 +1172,11 @@ fn SettingsPage() -> Element {
         move || current_gpu_label(&gpus)
     });
     let multi_gpu = gpus.len() > 1;
-    let conn = connected();
     rsx! {
         div { class: "page",
             div { class: "phead", "SETTINGS" }
             div { class: "card",
-                div { class: "setrow",
-                    div { class: "setmeta",
-                        div { class: "sett", "Engine" }
-                        div { class: "setd", "hushd denoiser service" }
-                    }
-                    div { class: if conn { "stat on" } else { "stat" },
-                        span { class: "wdot" }
-                        if conn { "CONNECTED" } else { "OFFLINE" }
-                    }
-                }
+                MicRow {}
                 div { class: "setrow",
                     div { class: "setmeta",
                         div { class: "sett", "GPU" }
@@ -1331,6 +1409,12 @@ body{ margin:0; }
 .setrow:first-child{ padding-top:2px; }
 .sett{ font-size:14px; color:var(--txt); font-weight:500; }
 .setd{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.03em; color:var(--mut); margin-top:4px; }
+.mselect{ -webkit-appearance:none; appearance:none; background:var(--card2); color:var(--txt);
+  border:1px solid var(--line); border-radius:8px; padding:7px 10px;
+  font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.03em;
+  max-width:190px; text-overflow:ellipsis; cursor:pointer; outline:none; }
+.mselect:hover{ border-color:var(--acc2); }
+.mselect option{ background:var(--card); color:var(--txt); }
 .stat{ display:inline-flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace;
   font-size:10px; letter-spacing:.16em; color:var(--mut); }
 .stat.on{ color:var(--acc); }
@@ -1532,6 +1616,13 @@ async fn run_sync(stream: UnixStream, mirror: &Controls) -> std::io::Result<()> 
     // Force an initial push so the daemon adopts this GUI's current settings.
     let mut last_intensity = f32::NAN;
     let mut last_gen = u64::MAX;
+    // Mic is the other way round: the daemon owns the persisted choice, so only
+    // push it when the user actually touched the picker.
+    let mut last_mic_gen = if MIC_TOUCHED.load(Ordering::Relaxed) {
+        u64::MAX
+    } else {
+        mirror.mic_gen()
+    };
 
     loop {
         tokio::select! {
@@ -1546,6 +1637,11 @@ async fn run_sync(stream: UnixStream, mirror: &Controls) -> std::io::Result<()> 
                     last_gen = generation;
                     let notches = mirror.notches_snapshot();
                     if !send(&mut wr, ClientMsg::SetNotches { notches }).await { break; }
+                }
+                let mic_gen = mirror.mic_gen();
+                if mic_gen != last_mic_gen {
+                    last_mic_gen = mic_gen;
+                    if !send(&mut wr, ClientMsg::SetMic { name: mirror.mic() }).await { break; }
                 }
             }
             line = lines.next_line() => {
@@ -1564,6 +1660,12 @@ async fn run_sync(stream: UnixStream, mirror: &Controls) -> std::io::Result<()> 
                             }
                             if let Ok(mut g) = GPU_NAME.lock() {
                                 *g = frame.gpu_name.clone();
+                            }
+                            if let Ok(mut g) = MICS.lock() {
+                                *g = frame.mics.clone();
+                            }
+                            if let Ok(mut g) = ACTIVE_MIC.lock() {
+                                *g = frame.mic.clone();
                             }
                         }
                     }
@@ -1624,10 +1726,12 @@ fn spawn_show_listener() {
     let _ = std::fs::remove_file(&path);
     if let Ok(listener) = std::os::unix::net::UnixListener::bind(&path) {
         std::thread::spawn(move || {
-            for conn in listener.incoming() {
-                if conn.is_ok() {
-                    SHOW_NOTIFY.notify_one();
-                }
+            use std::io::Read;
+            for mut c in listener.incoming().flatten() {
+                let mut buf = [0u8; 8];
+                let n = c.read(&mut buf).unwrap_or(0);
+                // "hide" is a scripting aid; anything else surfaces the window.
+                set_window_visible_from_any_thread(!buf[..n].starts_with(b"hide"));
             }
         });
     }

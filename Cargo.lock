@@ -2885,6 +2885,8 @@ dependencies = [
  "base64",
  "dioxus",
  "dioxus-native",
+ "glib",
+ "gtk",
  "hush-core",
  "image",
  "ksni",

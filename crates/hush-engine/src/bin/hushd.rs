@@ -14,7 +14,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use anyhow::Result;
-use hush_core::ipc::{ClientMsg, StateFrame, socket_path};
+use hush_core::ipc::{ClientMsg, MicInfo, StateFrame, socket_path};
 use hush_core::{Controls, SPECTRUM_BINS, model};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{UnixListener, UnixStream};
@@ -26,6 +26,8 @@ struct DaemonState {
     model_missing: AtomicBool,
     engine_error: Arc<Mutex<Option<String>>>,
     gpu_name: Option<String>,
+    /// Capture devices, refreshed in the background for the GUI's mic picker.
+    mics: Mutex<Vec<MicInfo>>,
 }
 
 fn main() -> Result<()> {
@@ -42,8 +44,23 @@ fn main() -> Result<()> {
         model_missing: AtomicBool::new(false),
         engine_error: Arc::new(Mutex::new(None)),
         gpu_name: gpu.as_ref().map(|g| g.name.clone()),
+        mics: Mutex::new(Vec::new()),
     });
     let controls = Controls::new();
+
+    // Keep the capture-device list fresh (hotplug) without touching the RT path.
+    {
+        let state = state.clone();
+        std::thread::spawn(move || {
+            loop {
+                let mics = hush_engine::engine::list_mics();
+                if let Ok(mut g) = state.mics.lock() {
+                    *g = mics;
+                }
+                std::thread::sleep(Duration::from_secs(2));
+            }
+        });
+    }
 
     // Resolve the model for the selected GPU's arch — no network here.
     match gpu
@@ -136,6 +153,8 @@ async fn serve_client(
                     model_missing: state.model_missing.load(Ordering::Relaxed),
                     engine_error: state.engine_error.lock().ok().and_then(|g| g.clone()),
                     gpu_name: state.gpu_name.clone(),
+                    mic: controls.mic(),
+                    mics: state.mics.lock().map(|g| g.clone()).unwrap_or_default(),
                 };
                 let mut buf = serde_json::to_vec(&frame)?;
                 buf.push(b'\n');
@@ -154,10 +173,17 @@ async fn serve_client(
     Ok(())
 }
 
-fn apply(line: &str, controls: &Controls) {
+fn apply(line: &str, controls: &Arc<Controls>) {
     match serde_json::from_str::<ClientMsg>(line) {
         Ok(ClientMsg::Intensity { value }) => controls.set_intensity(value),
         Ok(ClientMsg::SetNotches { notches }) => controls.set_notches(notches),
+        Ok(ClientMsg::SetMic { name }) => {
+            // pactl round-trips; keep them off this single-threaded server loop.
+            let controls = controls.clone();
+            std::thread::spawn(move || {
+                hush_engine::engine::apply_mic(&controls, name.as_deref());
+            });
+        }
         Ok(ClientMsg::Shutdown) => {
             hush_engine::engine::unload_virtual_mic();
             std::process::exit(0);

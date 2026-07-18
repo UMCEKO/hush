@@ -24,6 +24,15 @@ fn yes() -> bool {
     true
 }
 
+/// An input device the daemon can capture from.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct MicInfo {
+    /// PipeWire node name — the stable identifier `pactl` targets.
+    pub name: String,
+    /// Human-readable description shown in pickers.
+    pub desc: String,
+}
+
 /// A control change the GUI sends to the daemon.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "cmd", rename_all = "snake_case")]
@@ -32,6 +41,8 @@ pub enum ClientMsg {
     Intensity { value: f32 },
     /// Replace the full set of active hum notches.
     SetNotches { notches: Vec<NotchParam> },
+    /// Capture from this source (`None` = follow the system default mic).
+    SetMic { name: Option<String> },
     /// Ask the daemon to clean up and exit 0 (so a non-systemd sibling daemon can
     /// be respawned by the GUI — used when `systemctl restart` isn't available).
     Shutdown,
@@ -55,6 +66,12 @@ pub struct StateFrame {
     /// GPU the daemon is running Maxine on (for the settings display).
     #[serde(default)]
     pub gpu_name: Option<String>,
+    /// Source the engine is capturing from (`None` = system default).
+    #[serde(default)]
+    pub mic: Option<String>,
+    /// Capture devices currently available (monitors + HUSH itself excluded).
+    #[serde(default)]
+    pub mics: Vec<MicInfo>,
 }
 
 /// Control-socket path: `$XDG_RUNTIME_DIR/hush.sock`, falling back to `/tmp`.

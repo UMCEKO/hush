@@ -20,6 +20,7 @@ use spa::pod::serialize::PodSerializer;
 use spa::pod::{Object, Pod, Value};
 
 use crate::Denoiser;
+use hush_core::ipc::MicInfo;
 use hush_core::{Controls, NotchParam, SPECTRUM_BINS};
 
 const RATE: u32 = 48_000;
@@ -105,6 +106,69 @@ pub fn unload_virtual_mic() {
     clean_stale_modules();
 }
 
+/// Capture-capable sources: real mics + third-party virtual sources, minus
+/// sink monitors and HUSH's own output.
+pub fn list_mics() -> Vec<MicInfo> {
+    let Ok(out) = pactl(&["--format=json", "list", "sources"]) else {
+        return Vec::new();
+    };
+    let Ok(json) = serde_json::from_str::<serde_json::Value>(&out) else {
+        return Vec::new();
+    };
+    json.as_array()
+        .map(|a| a.as_slice())
+        .unwrap_or_default()
+        .iter()
+        .filter_map(|s| {
+            let name = s.get("name")?.as_str()?;
+            let is_monitor = s
+                .get("monitor_source")
+                .and_then(|m| m.as_str())
+                .is_some_and(|m| !m.is_empty());
+            if name == SINK || is_monitor {
+                return None;
+            }
+            Some(MicInfo {
+                name: name.to_string(),
+                desc: s
+                    .get("description")
+                    .and_then(|d| d.as_str())
+                    .unwrap_or(name)
+                    .to_string(),
+            })
+        })
+        .collect()
+}
+
+/// Select the capture source at runtime: persist the choice, then live-move the
+/// `nv-maxine-cap` stream to it (`None` = whatever the default is right now).
+/// No engine restart — the move is a session-manager reroute, audio keeps flowing.
+pub fn apply_mic(controls: &Controls, name: Option<&str>) {
+    hush_core::save_mic_pref(name);
+    controls.set_mic(name.map(str::to_string));
+    let target = match name {
+        Some(n) => n.to_string(),
+        None => match pactl(&["get-default-source"]) {
+            Ok(d) => d,
+            Err(_) => return,
+        },
+    };
+    let Ok(out) = pactl(&["--format=json", "list", "source-outputs"]) else {
+        return;
+    };
+    let Ok(json) = serde_json::from_str::<serde_json::Value>(&out) else {
+        return;
+    };
+    for so in json.as_array().map(|a| a.as_slice()).unwrap_or_default() {
+        if so.pointer("/properties/node.name").and_then(|n| n.as_str()) != Some("nv-maxine-cap") {
+            continue;
+        }
+        if let Some(idx) = so.get("index").and_then(|i| i.as_u64()) {
+            let _ = pactl(&["move-source-output", &idx.to_string(), &target]);
+        }
+    }
+}
+
 fn clean_stale_modules() {
     if let Ok(list) = pactl(&["list", "short", "modules"]) {
         for line in list.lines() {
@@ -130,10 +194,24 @@ pub fn run(
     clean_stale_modules();
     pw::init();
 
-    let real_mic = pactl(&["get-default-source"])?;
+    // Capture target: the persisted preference if that source still exists,
+    // else the system default.
+    let real_mic = match hush_core::load_mic_pref() {
+        Some(pref) if list_mics().iter().any(|m| m.name == pref) => {
+            controls.set_mic(Some(pref.clone()));
+            pref
+        }
+        _ => pactl(&["get-default-source"])?,
+    };
     let module = pactl(&[
         "load-module",
         "module-null-sink",
+        // Must stay "Audio/Source/Virtual": only the Virtual class pre-configures
+        // the adapter's ports (input_MONO/capture_MONO) — with plain
+        // "Audio/Source" the node comes up portless and the pw-link below fails.
+        // Note quickshell-based shells (DankMaterialShell) hide Virtual sources
+        // from their input pickers (exact media.class match); that needs a
+        // quickshell-side fix, not a class change here.
         "media.class=Audio/Source/Virtual",
         &format!("sink_name={SINK}"),
         "channel_map=mono",

@@ -17,6 +17,10 @@ libc.workspace = true
 tokio.workspace = true
 png = "0.17"
 ksni = "0.2"
+# Same gtk stack tao/wry are on: direct window show/hide that bypasses the
+# webview (see set_window_visible_from_any_thread).
+gtk = "0.18"
+glib = "0.18"
 dioxus.workspace = true
 dioxus-native = { workspace = true, optional = true }
 image = { version = "=0.25.6", optional = true, default-features = false, features = ["jpeg", "png", "webp"] }
