@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     container: ubuntu:22.04 # has libwebkit2gtk-4.1; immune to runner-image churn
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: System deps
         run: |
