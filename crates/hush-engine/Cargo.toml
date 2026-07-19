@@ -12,9 +12,9 @@ name = "hush_engine"
 hush-core.workspace = true
 anyhow.workspace = true
 serde_json.workspace = true
-pipewire = { version = "0.10", features = ["v0_3_49"] }
-ringbuf = "0.4"
-ctrlc = "3.4"
-rustfft = "6"
-hound = "3.5"
+pipewire.workspace = true
+ringbuf.workspace = true
+ctrlc.workspace = true
+rustfft.workspace = true
+hound.workspace = true
 tokio.workspace = true

@@ -8,8 +8,10 @@ const ICON_PNG_64: &[u8] = include_bytes!("../assets/hush-64.png");
 
 /// Decode an 8-bit RGBA PNG → (width, height, rgba bytes).
 fn decode_rgba(bytes: &[u8]) -> Option<(u32, u32, Vec<u8>)> {
-    let mut reader = png::Decoder::new(bytes).read_info().ok()?;
-    let mut buf = vec![0u8; reader.output_buffer_size()];
+    let mut reader = png::Decoder::new(std::io::Cursor::new(bytes))
+        .read_info()
+        .ok()?;
+    let mut buf = vec![0u8; reader.output_buffer_size()?];
     let info = reader.next_frame(&mut buf).ok()?;
     if info.color_type != png::ColorType::Rgba || info.bit_depth != png::BitDepth::Eight {
         return None;

@@ -16,6 +16,22 @@ libc = "0.2"
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "net", "io-util", "time", "sync"] }
 sha2 = "0.10"
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
+tar = "0.4"
+zstd = "0.13"
+pipewire = { version = "0.10", features = ["v0_3_49"] }
+ringbuf = "0.5"
+ctrlc = "3.5"
+rustfft = "6"
+hound = "3.5"
+png = "0.18"
+# ksni 0.3 changed the spawn API (async TrayMethods) — bump deliberately, with code.
+ksni = "0.2"
+# Last gtk3 release of the gtk-rs stack; pinned to what tao/wry link against.
+gtk = "0.18"
+glib = "0.18"
+# Pinned exact: blitz-dom 0.3.0-alpha.5 requires image =0.25.6.
+image = { version = "=0.25.6", default-features = false, features = ["jpeg", "png", "webp"] }
+base64 = "0.22"
 
 hush-core = { path = "crates/hush-core" }
 hush-engine = { path = "crates/hush-engine" }
@@ -38,3 +54,4 @@ blitz-net = { git = "https://github.com/UMCEKO/blitz", rev = "56ec6bff4260039bdb
 blitz-paint = { git = "https://github.com/UMCEKO/blitz", rev = "56ec6bff4260039bdb205fb0e3b4f547a783958d" }
 blitz-shell = { git = "https://github.com/UMCEKO/blitz", rev = "56ec6bff4260039bdb205fb0e3b4f547a783958d" }
 blitz-traits = { git = "https://github.com/UMCEKO/blitz", rev = "56ec6bff4260039bdb205fb0e3b4f547a783958d" }
+

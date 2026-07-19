@@ -15,18 +15,18 @@ anyhow.workspace = true
 serde_json.workspace = true
 libc.workspace = true
 tokio.workspace = true
-png = "0.17"
-ksni = "0.2"
+png.workspace = true
+ksni.workspace = true
 # Same gtk stack tao/wry are on: direct window show/hide that bypasses the
 # webview (see set_window_visible_from_any_thread).
-gtk = "0.18"
-glib = "0.18"
+gtk.workspace = true
+glib.workspace = true
 dioxus.workspace = true
 dioxus-native = { workspace = true, optional = true }
-image = { version = "=0.25.6", optional = true, default-features = false, features = ["jpeg", "png", "webp"] }
+image = { workspace = true, optional = true }
 
 [build-dependencies]
-base64 = "0.22"
+base64.workspace = true
 
 # UI: webview by default; Blitz (native/wgpu) via the `blitz` feature + NV_MAXINE_BLITZ=1.
 [features]
