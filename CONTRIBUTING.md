@@ -40,7 +40,16 @@ by running:
 2. Start/restart the daemon (`systemctl --user restart hush.service`, or let the
    GUI spawn it) and click through: main toggle, suppression slider, mic picker,
    bands page, settings, tray hide/show.
-3. `cargo fmt` and `cargo clippy` before pushing.
+3. Run the same gate CI enforces before pushing — both must be clean:
+
+   ```sh
+   cargo fmt --all --check
+   cargo clippy --workspace --all-targets --all-features -- -D warnings
+   ```
+
+   `-D warnings` means every clippy lint is a hard error, and `--all-features`
+   lints the `blitz` code paths too — so `#[cfg(feature = "blitz")]` blocks are
+   held to the same bar as the default build.
 
 ## Gotchas worth knowing
 
