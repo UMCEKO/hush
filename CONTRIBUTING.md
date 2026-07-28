@@ -58,6 +58,13 @@ by running:
   `window::set_window_visible_from_any_thread` (see its comment).
 - The virtual mic must be `media.class=Audio/Source/Virtual` — plain
   `Audio/Source` comes up portless (see `engine.rs`).
+- **The capture and playback streams are on different clocks.** They sit in
+  separate PipeWire graph segments, so the buffer between them is a free
+  integrator: left alone it parks wherever startup left it and drifts into an
+  overrun (this is what used to make long sessions pop). The worker runs a level
+  servo — a high-water gate plus single-sample splices at the block's quietest
+  point — to hold it near one quantum. If you touch that loop, watch
+  Settings → Audio health: `LOST` must stay at 0 and the buffer level steady.
 - The dioxus dependency is a pinned fork (see `[patch.crates-io]` in the root
   `Cargo.toml`); bumping it is a deliberate, tested change — don't drive-by
   update it.

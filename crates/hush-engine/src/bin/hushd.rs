@@ -155,6 +155,8 @@ async fn serve_client(
                     gpu_name: state.gpu_name.clone(),
                     mic: controls.mic(),
                     mics: state.mics.lock().map(|g| g.clone()).unwrap_or_default(),
+                    dropped_samples: controls.dropped(),
+                    buffer_ms: controls.buffer_ms(),
                 };
                 let mut buf = serde_json::to_vec(&frame)?;
                 buf.push(b'\n');

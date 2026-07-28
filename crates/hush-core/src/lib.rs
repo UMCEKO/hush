@@ -83,6 +83,8 @@ pub struct Controls {
     mic_gen: AtomicU64,               // bumped on every selection change
     pub spectrum: Mutex<Vec<f32>>,    // post-band magnitudes, 0..1 (denoised + notch)
     pub spectrum_in: Mutex<Vec<f32>>, // pre-band magnitudes, 0..1 (denoised, same scale)
+    dropped: AtomicU64,               // audio lost to a stalled worker / full buffer
+    buffer_ms: AtomicU32,             // output-buffer working level, ms
 }
 
 impl Controls {
@@ -95,7 +97,27 @@ impl Controls {
             mic_gen: AtomicU64::new(0),
             spectrum: Mutex::new(vec![0.0; SPECTRUM_BINS]),
             spectrum_in: Mutex::new(vec![0.0; SPECTRUM_BINS]),
+            dropped: AtomicU64::new(0),
+            buffer_ms: AtomicU32::new(0),
         })
+    }
+    /// Report audio the engine could not carry (a stalled worker, or a buffer with
+    /// no room left). Cumulative: a *growing* value is a glitch the user hears.
+    pub fn add_dropped(&self, samples: u64) {
+        if samples > 0 {
+            self.dropped.fetch_add(samples, Ordering::Relaxed);
+        }
+    }
+    pub fn dropped(&self) -> u64 {
+        self.dropped.load(Ordering::Relaxed)
+    }
+    /// Current output-buffer fill in ms — the level the servo is holding. Low and
+    /// steady is healthy; a climb means the servo is losing ground to clock drift.
+    pub fn set_buffer_ms(&self, ms: u32) {
+        self.buffer_ms.store(ms, Ordering::Relaxed);
+    }
+    pub fn buffer_ms(&self) -> u32 {
+        self.buffer_ms.load(Ordering::Relaxed)
     }
     pub fn set_intensity(&self, ratio: f32) {
         self.intensity

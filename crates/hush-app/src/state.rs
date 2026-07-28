@@ -2,7 +2,7 @@
 //! progress, persisted on-disk flags, and the `Ctl` context shared by pages.
 
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, AtomicU8, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU8, AtomicU32, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 
 use dioxus::prelude::*;
@@ -32,6 +32,10 @@ pub(crate) static ACTIVE_MIC: Mutex<Option<String>> = Mutex::new(None);
 pub(crate) static MIC_TOUCHED: AtomicBool = AtomicBool::new(false);
 /// Set by the settings GPU picker to force the setup page (new arch needs a model).
 pub(crate) static SETUP_REQUESTED: AtomicBool = AtomicBool::new(false);
+/// Audio-path health from the daemon: samples lost to stalls (should stay flat)
+/// and the output buffer's working level in ms.
+pub(crate) static AUDIO_DROPPED: AtomicU64 = AtomicU64::new(0);
+pub(crate) static AUDIO_BUFFER_MS: AtomicU32 = AtomicU32::new(0);
 
 // ---- live model-download progress (written by the download thread) ----
 pub(crate) const DL_IDLE: u8 = 0;

@@ -2908,6 +2908,7 @@ dependencies = [
  "ctrlc",
  "hound",
  "hush-core",
+ "libc",
  "pipewire",
  "ringbuf",
  "rustfft",

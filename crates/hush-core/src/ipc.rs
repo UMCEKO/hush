@@ -72,6 +72,14 @@ pub struct StateFrame {
     /// Capture devices currently available (monitors + HUSH itself excluded).
     #[serde(default)]
     pub mics: Vec<MicInfo>,
+    /// Samples of audio lost since the engine started — a stalled worker or a
+    /// buffer with no room. Should stay flat; growth is an audible glitch.
+    #[serde(default)]
+    pub dropped_samples: u64,
+    /// Output-buffer safety margin in ms: the shallowest the buffer got in the last
+    /// second. This is the level the engine's servo holds; it should stay steady.
+    #[serde(default)]
+    pub buffer_ms: u32,
 }
 
 /// Control-socket path: `$XDG_RUNTIME_DIR/hush.sock`, falling back to `/tmp`.

@@ -1,13 +1,16 @@
 //! Settings + QoL: mic pick, GPU, launch-at-login, restart, about.
 
 use std::sync::atomic::Ordering;
+use std::time::Duration;
 
 use dioxus::prelude::*;
 use hush_core::model::{self, GpuInfo};
 
 use super::main_page::MicRow;
 use crate::service::{restart_engine, service_enabled, set_autostart};
-use crate::state::{CLOSE_TO_TRAY, GPU_NAME, SETUP_REQUESTED, persist_close_to_tray};
+use crate::state::{
+    AUDIO_BUFFER_MS, AUDIO_DROPPED, CLOSE_TO_TRAY, GPU_NAME, SETUP_REQUESTED, persist_close_to_tray,
+};
 
 /// Label for the currently-selected GPU (settings row).
 fn current_gpu_label(gpus: &[GpuInfo]) -> String {
@@ -34,6 +37,35 @@ fn cycle_gpu(gpus: &[GpuInfo]) {
     match model::resolve_model(2, next.sm) {
         Ok(Some(_)) => restart_engine(),
         _ => SETUP_REQUESTED.store(true, Ordering::Relaxed),
+    }
+}
+
+/// Live audio-path health: the buffer level the engine's servo is holding, and any
+/// audio lost to a stall. `lost` should stay at 0 — if it climbs while you talk,
+/// that's the glitch you can hear, with a number attached.
+#[component]
+fn AudioHealthRow() -> Element {
+    let mut buf_ms = use_signal(|| 0u32);
+    let mut lost = use_signal(|| 0u64);
+    use_future(move || async move {
+        loop {
+            buf_ms.set(AUDIO_BUFFER_MS.load(Ordering::Relaxed));
+            lost.set(AUDIO_DROPPED.load(Ordering::Relaxed));
+            tokio::time::sleep(Duration::from_millis(700)).await;
+        }
+    });
+    let clean = lost() == 0;
+    rsx! {
+        div { class: "setrow",
+            div { class: "setmeta",
+                div { class: "sett", "Audio health" }
+                div { class: "setd", "Buffer margin before underrun, and audio lost since start" }
+            }
+            div { class: if clean { "stat on" } else { "stat" },
+                span { class: "wdot" }
+                if clean { "{buf_ms} ms  ·  CLEAN" } else { "{buf_ms} ms  ·  {lost} LOST" }
+            }
+        }
     }
 }
 
@@ -107,6 +139,7 @@ pub(crate) fn SettingsPage() -> Element {
                     }
                     button { class: "sbtn", onclick: move |_| restart_engine(), "RESTART" }
                 }
+                AudioHealthRow {}
             }
             div { class: "card",
                 div { class: "sett", "About" }

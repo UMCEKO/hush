@@ -12,7 +12,8 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
 use crate::state::{
-    ACTIVE_MIC, CONNECTED, ENGINE_ERROR, GPU_NAME, MIC_TOUCHED, MICS, MODEL_MISSING,
+    ACTIVE_MIC, AUDIO_BUFFER_MS, AUDIO_DROPPED, CONNECTED, ENGINE_ERROR, GPU_NAME, MIC_TOUCHED,
+    MICS, MODEL_MISSING,
 };
 
 /// Background thread that keeps the GUI's `CONTROLS` mirror in sync with `hushd`:
@@ -150,6 +151,8 @@ async fn run_sync(stream: UnixStream, mirror: &Controls) -> std::io::Result<()> 
                             if let Ok(mut g) = ACTIVE_MIC.lock() {
                                 *g = frame.mic.clone();
                             }
+                            AUDIO_DROPPED.store(frame.dropped_samples, Ordering::Relaxed);
+                            AUDIO_BUFFER_MS.store(frame.buffer_ms, Ordering::Relaxed);
                         }
                     }
                     None => break,

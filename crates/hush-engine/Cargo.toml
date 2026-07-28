@@ -11,6 +11,7 @@ name = "hush_engine"
 [dependencies]
 hush-core.workspace = true
 anyhow.workspace = true
+libc.workspace = true
 serde_json.workspace = true
 pipewire.workspace = true
 ringbuf.workspace = true
