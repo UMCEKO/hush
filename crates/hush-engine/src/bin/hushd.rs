@@ -48,14 +48,35 @@ fn main() -> Result<()> {
     });
     let controls = Controls::new();
 
-    // Keep the capture-device list fresh (hotplug) without touching the RT path.
+    // Keep the capture-device list fresh (hotplug) without touching the RT path,
+    // and watchdog our own virtual mic while we are here.
     {
         let state = state.clone();
         std::thread::spawn(move || {
+            // The engine's stream-loss handler catches PipeWire restarting, but not
+            // the null-sink being unloaded out from under a still-connected stream —
+            // which is what a second HUSH instance's stale-module cleanup does. Once
+            // we have seen our own mic, its sustained absence means this engine is
+            // dead in place: exit so the supervisor builds a fresh one rather than
+            // sit here "active" with no microphone.
+            let mut seen = false;
+            let mut missing = 0u32;
             loop {
                 let mics = hush_engine::engine::list_mics();
                 if let Ok(mut g) = state.mics.lock() {
                     *g = mics;
+                }
+                if hush_engine::engine::virtual_mic_present() {
+                    seen = true;
+                    missing = 0;
+                } else if seen {
+                    missing += 1;
+                    if missing >= 3 {
+                        eprintln!(
+                            "hushd: virtual mic gone for ~6s while running — exiting so a fresh engine is started"
+                        );
+                        std::process::exit(1);
+                    }
                 }
                 std::thread::sleep(Duration::from_secs(2));
             }

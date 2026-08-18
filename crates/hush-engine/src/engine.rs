@@ -99,6 +99,28 @@ fn try_realtime() {
     }
 }
 
+/// The graph tore our nodes down — PipeWire restarted, or something unloaded the
+/// null-sink. Everything this engine built (the virtual mic module, both streams,
+/// the links between them) died with it, and none of it can be rebuilt in place:
+/// the core connection itself is gone. Exit non-zero so the supervisor starts a
+/// clean engine — systemd's `Restart=on-failure` under the user service, or the
+/// GUI's reconnect loop when it sibling-spawned us (Flatpak). Without this the
+/// daemon sits there "active" forever with a dead connection and no virtual mic,
+/// which is exactly how a long-running session silently loses its microphone.
+fn graph_lost(which: &str, old: &pw::stream::StreamState, new: &pw::stream::StreamState) {
+    eprintln!(
+        "hushd: {which} stream lost the graph ({old:?} -> {new:?}) — exiting so a fresh engine is started"
+    );
+    std::process::exit(1);
+}
+
+/// Did a stream that was previously live just fall out of the graph? Startup
+/// transitions (Unconnected -> Connecting -> Paused) must not count.
+fn dropped_out(old: &pw::stream::StreamState, new: &pw::stream::StreamState) -> bool {
+    use pw::stream::StreamState::*;
+    matches!(old, Streaming | Paused) && matches!(new, Unconnected | Error(_))
+}
+
 fn build_notches(notches: &[NotchParam], sr: f32) -> Vec<Biquad> {
     notches
         .iter()
@@ -132,6 +154,18 @@ fn pactl(args: &[&str]) -> Result<String> {
         bail!("pactl {:?}: {}", args, String::from_utf8_lossy(&out.stderr));
     }
     Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+}
+
+/// Is our virtual mic actually present in the graph right now? Used by the
+/// daemon's watchdog — the stream-loss path above catches a PipeWire restart, but
+/// not the null-sink being unloaded out from under a still-connected stream.
+pub fn virtual_mic_present() -> bool {
+    pactl(&["list", "short", "sources"])
+        .map(|out| {
+            out.lines()
+                .any(|l| l.split('\t').nth(1).map(str::trim) == Some(SINK))
+        })
+        .unwrap_or(false)
 }
 
 /// Unload any leftover HUSH virtual-mic null-sink modules (shutdown/restart).
@@ -521,6 +555,11 @@ pub fn run(
                 }
             }
         })
+        .state_changed(|_stream, _data, old, new| {
+            if dropped_out(&old, &new) {
+                graph_lost("capture", &old, &new);
+            }
+        })
         .register()?;
 
     // ---- playback: clean ring -> virtual source ----
@@ -588,6 +627,11 @@ pub fn run(
                 *chunk.size_mut() = (SAMPLE * nf) as _;
             },
         )
+        .state_changed(|_stream, _data, old, new| {
+            if dropped_out(&old, &new) {
+                graph_lost("playback", &old, &new);
+            }
+        })
         .register()?;
 
     let cap_fmt = audio_format_param();
