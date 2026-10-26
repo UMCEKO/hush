@@ -11,7 +11,7 @@ in
     enable = lib.mkEnableOption "HUSH denoiser daemon (NVIDIA Maxine virtual microphone)";
     package = lib.mkOption {
       type = lib.types.package;
-      default = flake.packages.${pkgs.system}.hush;
+      default = flake.packages.${pkgs.stdenv.hostPlatform.system}.hush;
       description = "The hush package to use.";
     };
   };
