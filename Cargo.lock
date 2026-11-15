@@ -2869,7 +2869,7 @@ checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 
 [[package]]
 name = "hush-app"
-version = "1.0.1"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "base64",
@@ -2888,7 +2888,7 @@ dependencies = [
 
 [[package]]
 name = "hush-core"
-version = "1.0.1"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "libc",
@@ -2902,7 +2902,7 @@ dependencies = [
 
 [[package]]
 name = "hush-engine"
-version = "1.0.1"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "ctrlc",
