@@ -42,7 +42,7 @@ rustPlatform.buildRustPackage {
   cargoLock = {
     lockFile = ../Cargo.lock;
     outputHashes = {
-      "dioxus-0.8.0-alpha.0" = "sha256-4f4I7FeAGrt20WHY9NH9pJTXuLeB5fYYe6O+m7c4ZOY=";
+      "dioxus-0.8.0-alpha.0" = "sha256-Nef+YmWfap6RH8Kf76kkU4A8ADCV0XZB7lHJ/ksi2Fs=";
       "blitz-dom-0.3.0-alpha.5" = "sha256-sygNvgWcwGuntaoMULKdBk1Ran9hCPIOfFzXJMfXJ6Q=";
     };
   };
@@ -69,7 +69,6 @@ rustPlatform.buildRustPackage {
     glib
     glib-networking
     openssl
-    xdotool # libxdo for dioxus-desktop
   ];
 
   postInstall = ''

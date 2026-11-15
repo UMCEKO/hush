@@ -937,7 +937,7 @@ dependencies = [
 [[package]]
 name = "const-serialize"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "const-serialize-macro",
  "serde",
@@ -946,7 +946,7 @@ dependencies = [
 [[package]]
 name = "const-serialize-macro"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1345,7 +1345,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "dioxus-asset-resolver",
  "dioxus-cli-config",
@@ -1371,7 +1371,7 @@ dependencies = [
 [[package]]
 name = "dioxus-asset-resolver"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "dioxus-cli-config",
  "http",
@@ -1388,7 +1388,7 @@ dependencies = [
 [[package]]
 name = "dioxus-cli-config"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "wasm-bindgen",
 ]
@@ -1396,7 +1396,7 @@ dependencies = [
 [[package]]
 name = "dioxus-config-macro"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1405,12 +1405,12 @@ dependencies = [
 [[package]]
 name = "dioxus-config-macros"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 
 [[package]]
 name = "dioxus-core"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "anyhow",
  "const_format",
@@ -1432,7 +1432,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "convert_case",
  "dioxus-rsx",
@@ -1444,12 +1444,12 @@ dependencies = [
 [[package]]
 name = "dioxus-core-types"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 
 [[package]]
 name = "dioxus-desktop"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1505,7 +1505,7 @@ dependencies = [
 [[package]]
 name = "dioxus-devtools"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "dioxus-cli-config",
  "dioxus-core",
@@ -1522,7 +1522,7 @@ dependencies = [
 [[package]]
 name = "dioxus-devtools-types"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "dioxus-core",
  "serde",
@@ -1532,7 +1532,7 @@ dependencies = [
 [[package]]
 name = "dioxus-document"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -1550,7 +1550,7 @@ dependencies = [
 [[package]]
 name = "dioxus-history"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "dioxus-core",
  "tracing",
@@ -1559,7 +1559,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "dioxus-core",
  "dioxus-signals",
@@ -1574,7 +1574,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "async-trait",
  "bytes",
@@ -1600,7 +1600,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html-internal-macro"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "convert_case",
  "proc-macro2",
@@ -1611,7 +1611,7 @@ dependencies = [
 [[package]]
 name = "dioxus-interpreter-js"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "dioxus-core",
  "dioxus-core-types",
@@ -1630,7 +1630,7 @@ dependencies = [
 [[package]]
 name = "dioxus-logger"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "dioxus-cli-config",
  "tracing",
@@ -1641,7 +1641,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "android-activity",
  "anyrender",
@@ -1674,7 +1674,7 @@ dependencies = [
 [[package]]
 name = "dioxus-native-dom"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "blitz-dom",
  "blitz-traits",
@@ -1688,7 +1688,7 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "proc-macro2",
  "proc-macro2-diagnostics",
@@ -1700,7 +1700,7 @@ dependencies = [
 [[package]]
 name = "dioxus-signals"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -1715,7 +1715,7 @@ dependencies = [
 [[package]]
 name = "dioxus-stores"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "dioxus-core",
  "dioxus-signals",
@@ -1726,7 +1726,7 @@ dependencies = [
 [[package]]
 name = "dioxus-stores-macro"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "convert_case",
  "proc-macro2",
@@ -1737,7 +1737,7 @@ dependencies = [
 [[package]]
 name = "dioxus-web"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "dioxus-cli-config",
  "dioxus-core",
@@ -2361,7 +2361,7 @@ dependencies = [
 [[package]]
 name = "generational-box"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "parking_lot",
  "tracing",
@@ -2869,7 +2869,7 @@ checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 
 [[package]]
 name = "hush-app"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "anyhow",
  "base64",
@@ -2888,7 +2888,7 @@ dependencies = [
 
 [[package]]
 name = "hush-core"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "anyhow",
  "libc",
@@ -2902,7 +2902,7 @@ dependencies = [
 
 [[package]]
 name = "hush-engine"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "anyhow",
  "ctrlc",
@@ -3464,7 +3464,7 @@ dependencies = [
 [[package]]
 name = "lazy-js-bundle"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 
 [[package]]
 name = "lazy_static"
@@ -3593,25 +3593,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "libxdo"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00333b8756a3d28e78def82067a377de7fa61b24909000aeaa2b446a948d14db"
-dependencies = [
- "libxdo-sys",
-]
-
-[[package]]
-name = "libxdo-sys"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db23b9e7e2b7831bbd8aac0bbeeeb7b68cbebc162b227e7052e8e55829a09212"
-dependencies = [
- "libc",
- "x11",
-]
-
-[[package]]
 name = "linebender_resource_handle"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3696,7 +3677,7 @@ dependencies = [
 [[package]]
 name = "manganis"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "const-serialize",
  "jni 0.21.1",
@@ -3710,7 +3691,7 @@ dependencies = [
 [[package]]
 name = "manganis-core"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "const-serialize",
  "dioxus-cli-config",
@@ -3722,7 +3703,7 @@ dependencies = [
 [[package]]
 name = "manganis-macro"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "dunce",
  "macro-string",
@@ -3849,7 +3830,6 @@ dependencies = [
  "dpi",
  "gtk",
  "keyboard-types 0.7.0",
- "libxdo",
  "objc2 0.6.4",
  "objc2-app-kit 0.3.2",
  "objc2-core-foundation",
@@ -6325,7 +6305,7 @@ dependencies = [
 [[package]]
 name = "subsecond"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "js-sys",
  "libc",
@@ -6343,7 +6323,7 @@ dependencies = [
 [[package]]
 name = "subsecond-types"
 version = "0.8.0-alpha.0"
-source = "git+https://github.com/UMCEKO/dioxus?rev=555b9516b0b70800c13f0f44e51c4f13d53c15ef#555b9516b0b70800c13f0f44e51c4f13d53c15ef"
+source = "git+https://github.com/UMCEKO/dioxus?rev=a45958286caf7450d507b32c14d95518017164b3#a45958286caf7450d507b32c14d95518017164b3"
 dependencies = [
  "serde",
 ]
